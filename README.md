@@ -6,7 +6,9 @@
 
 ## 🧠 What This Does
 
-This Chrome extension fixes GitHub's... *creative* decision to show you relative timestamps like "2 weeks ago" instead of, you know, **the actual date and time something happened**.
+This cross-browser extension fixes GitHub's... *creative* decision to show you relative timestamps like "2 weeks ago" instead of, you know, **the actual date and time something happened**.
+
+**Now works with both Chrome and Firefox!**
 
 Say goodbye to:
 - "3 days ago" ← Was that Tuesday? Wednesday? Who knows!
@@ -19,14 +21,24 @@ Say hello to:
 
 ---
 
-## 📦 How to Use It
+## 📦 Installation
 
-### Installation
+### Chrome/Chromium
 1. Download or clone this repository
 2. Open Chrome and go to `chrome://extensions`
 3. Enable **Developer mode** (top right)
-4. Click **Load unpacked** and select the folder
+4. Click **Load unpacked** and select the extension directory
 5. Visit GitHub and enjoy not being gaslit by "2 days ago"
+
+### Firefox
+1. Download or clone this repository
+2. Open Firefox and navigate to `about:debugging`
+3. Click **This Firefox** in the sidebar
+4. Click **Load Temporary Add-on**
+5. Navigate to the extension directory and select the `manifest.json` file
+6. The extension will be loaded temporarily
+
+*For permanent Firefox installation, the extension would need to be signed through Mozilla's add-on store.*
 
 ### What You'll See
 - **Recent events**: `Thu, Jun 26`
@@ -67,9 +79,18 @@ The extension is **intentionally disabled** on certain GitHub pages where precis
 
 ## ⚙️ Technical Notes
 
-For the curious devs:
-- Built with **Manifest V3**
-- **No frameworks**, just JavaScript and Chrome's Extension APIs
+### Cross-Browser Compatibility
+- **Chrome**: Uses Manifest V3 with Chrome Extension APIs
+- **Firefox**: Uses WebExtensions API with browser polyfills
+- **Unified codebase**: Single extension that works in both browsers
+- **Automatic detection**: Detects browser environment and uses appropriate APIs
+
+### Development Features
+- **No frameworks**, just vanilla JavaScript and browser Extension APIs
+- **Functional programming**: Pure functions and immutable data structures
+- **Modern JavaScript**: ES6+ features with proper JSDoc documentation
+- **Error handling**: Robust error handling throughout the codebase
+- **Accessibility**: Semantic HTML and ARIA attributes
 - Handles **SPA navigation** and **dynamic content injection**
 - Minimal footprint, no trackers, no nonsense
 
@@ -82,6 +103,9 @@ A: 🙄 Hovering is for cowards and timestamp apologists.
 
 **Q: Doesn't GitHub show absolute time sometimes?**  
 A: Inconsistently. And usually not when you're scanning a list of commits or comments.
+
+**Q: Does this work in Firefox now?**  
+A: Yes! The extension now works in both Chrome and Firefox using a unified codebase.
 
 **Q: Mobile support?**  
 A: Chrome extensions don’t work on mobile. Complain to your browser vendor.

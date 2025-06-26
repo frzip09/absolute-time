@@ -40,22 +40,20 @@
 
   //#region Settings Management
   /**
-   * Loads settings from Chrome storage
+   * Loads settings from browser storage
    * @returns {Promise<Object>} Promise resolving to settings object
    */
-  const loadSettings = () => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
-      return new Promise((resolve) => {
-        chrome.storage.sync.get(settings, (loadedSettings) => {
-          if (loadedSettings) {
-            resolve(loadedSettings);
-          } else {
-            resolve(createDefaultSettings());
-          }
-        });
-      });
+  const loadSettings = async () => {
+    if (unifiedBrowser && unifiedBrowser.isSupported) {
+      try {
+        const loadedSettings = await unifiedBrowser.storage.get(settings);
+        return loadedSettings || createDefaultSettings();
+      } catch (error) {
+        console.error("[absolute-time] Failed to load settings:", error);
+        return createDefaultSettings();
+      }
     }
-    return Promise.resolve(createDefaultSettings());
+    return createDefaultSettings();
   };
 
   /**
@@ -75,8 +73,8 @@
    * @param {Function} onSettingsChange - Callback for settings changes
    */
   const setupMessageListener = (onSettingsChange) => {
-    if (typeof chrome !== "undefined" && chrome.runtime) {
-      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (unifiedBrowser && unifiedBrowser.isSupported) {
+      unifiedBrowser.runtime.addMessageListener((message, sender, sendResponse) => {
         const newSettings = handleSettingsMessage(message);
         if (newSettings) {
           onSettingsChange(newSettings);

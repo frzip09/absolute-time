@@ -75,14 +75,18 @@ const createToggleConfig = (isActive) => Object.freeze({
 });
 //#endregion
 
-//#region Chrome API Wrappers
+//#region Browser API Wrappers
 /**
- * Loads settings from Chrome storage
+ * Loads settings from browser storage
  * @returns {Promise<Object>} Promise resolving to settings
  */
 const loadSettings = async () => {
+  if (!unifiedBrowser || !unifiedBrowser.isSupported) {
+    return defaultSettings;
+  }
+  
   try {
-    const result = await chrome.storage.sync.get(defaultSettings);
+    const result = await unifiedBrowser.storage.get(defaultSettings);
     return result || defaultSettings;
   } catch (error) {
     console.error('Failed to load settings:', error);
@@ -91,13 +95,17 @@ const loadSettings = async () => {
 };
 
 /**
- * Saves settings to Chrome storage and notifies content scripts
+ * Saves settings to browser storage and notifies content scripts
  * @param {Object} settings - Settings to save
  * @returns {Promise<void>} Promise resolving when save is complete
  */
 const saveSettings = async (settings) => {
+  if (!unifiedBrowser || !unifiedBrowser.isSupported) {
+    throw new Error('Browser API not supported');
+  }
+  
   try {
-    await chrome.storage.sync.set(settings);
+    await unifiedBrowser.storage.set(settings);
     await notifyContentScripts(settings);
   } catch (error) {
     console.error('Failed to save settings:', error);
@@ -111,8 +119,12 @@ const saveSettings = async (settings) => {
  * @returns {Promise<void>} Promise resolving when notifications are sent
  */
 const notifyContentScripts = async (settings) => {
+  if (!unifiedBrowser || !unifiedBrowser.isSupported) {
+    return;
+  }
+  
   try {
-    const tabs = await chrome.tabs.query({ url: '*://*.github.com/*' });
+    const tabs = await unifiedBrowser.tabs.query({ url: '*://*.github.com/*' });
     const notifications = tabs.map(tab => 
       sendMessageToTab(tab.id, {
         type: 'settingsChanged',
@@ -132,8 +144,12 @@ const notifyContentScripts = async (settings) => {
  * @returns {Promise<void>} Promise resolving when message is sent
  */
 const sendMessageToTab = async (tabId, message) => {
+  if (!unifiedBrowser || !unifiedBrowser.isSupported) {
+    return;
+  }
+  
   try {
-    await chrome.tabs.sendMessage(tabId, message);
+    await unifiedBrowser.tabs.sendMessage(tabId, message);
   } catch (error) {
     // Ignore errors for tabs without content script
   }
@@ -225,7 +241,9 @@ const createToggleHandler = (settingKey) => async () => {
  */
 const createOptionsHandler = () => (event) => {
   event.preventDefault();
-  chrome.runtime.openOptionsPage();
+  if (unifiedBrowser && unifiedBrowser.isSupported) {
+    unifiedBrowser.runtime.openOptionsPage();
+  }
   window.close();
 };
 
