@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absolute Time - Settings</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1e293b;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #64748b;
+        }
+
+        .settings-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .setting-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            padding: 20px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-info {
+            flex: 1;
+            margin-right: 20px;
+        }
+
+        .setting-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+
+        .setting-description {
+            font-size: 14px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .setting-details {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            width: 52px;
+            height: 28px;
+            background: #d1d5db;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+        }
+
+        .toggle-switch::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active::before {
+            transform: translateX(24px);
+        }
+
+        .status-section {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .status-title {
+            font-weight: 600;
+            color: #0c4a6e;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .status-indicator.enabled {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-indicator.disabled {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .info-section {
+            background: linear-gradient(135deg, #fefce8, #fef3c7);
+            border: 1px solid #fde68a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-title {
+            font-weight: 600;
+            color: #92400e;
+            margin-bottom: 8px;
+        }
+
+        .info-text {
+            color: #a16207;
+            font-size: 14px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .save-notification.show {
+            transform: translateX(0);
+        }
+
+        .example-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .example-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .example-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .example-before {
+            color: #ef4444;
+            font-family: monospace;
+        }
+
+        .example-after {
+            color: #10b981;
+            font-family: monospace;
+        }
+
+        .example-arrow {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⏰ Absolute Time Settings</h1>
+            <p>Configure how GitHub's relative times are converted to absolute dates</p>
+        </div>
+
+        <div class="settings-card">
+            <h2 class="card-title">
+                ⚙️ Extension Settings
+            </h2>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title">Enable Extension</div>
+                    <div class="setting-description">
+                        When enabled, the extension will automatically convert GitHub's relative time elements 
+                        (like "2 hours ago") to absolute datetime format (like "Dec 15, 2022 at 3:45 PM").
+                    </div>
+                    <div class="setting-details">
+                        This affects all relative-time elements on GitHub pages including commits, issues, and pull requests.
+                    </div>
+                </div>
+                <div class="toggle-switch" id="enabledToggle"></div>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title">Debug Mode</div>
+                    <div class="setting-description">
+                        Enable debug logging to the browser console. Useful for troubleshooting issues 
+                        or understanding how the extension processes relative time elements.
+                    </div>
+                    <div class="setting-details">
+                        Debug messages will appear in the browser's developer console (F12 → Console tab).
+                    </div>
+                </div>
+                <div class="toggle-switch" id="debugToggle"></div>
+            </div>
+
+            <div class="status-section">
+                <div class="status-title">
+                    📊 Current Status
+                </div>
+                <div class="status-indicator" id="statusIndicator">
+                    <div class="status-dot"></div>
+                    <span id="statusText">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h2 class="card-title">
+                📖 How It Works
+            </h2>
+            <p style="margin-bottom: 16px; color: #6b7280;">
+                This extension modifies GitHub's relative-time elements to show absolute dates instead of relative ones.
+            </p>
+
+            <div class="example-section">
+                <div class="example-title">Examples of conversions:</div>
+                <div class="example-item">
+                    <span class="example-before">"2 hours ago"</span>
+                    <span class="example-arrow">→</span>
+                    <span class="example-after">"Thu, Jun 26"</span>
+                </div>
+                <div class="example-item">
+                    <span class="example-before">"3 days ago"</span>
+                    <span class="example-arrow">→</span>
+                    <span class="example-after">"Mon, Jun 23"</span>
+                </div>
+                <div class="example-item">
+                    <span class="example-before">"last year"</span>
+                    <span class="example-arrow">→</span>
+                    <span class="example-after">"M, Jun 1, 2020"</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-card">
+            <h2 class="card-title">
+                ℹ️ Additional Information
+            </h2>
+            <div class="info-section">
+                <div class="info-title">About Relative Time Elements</div>
+                <div class="info-text">
+                    GitHub uses the <code>relative-time</code> web component to display human-friendly relative dates. 
+                    This extension intercepts these elements and converts them to show absolute dates for better precision 
+                    and clarity, especially useful for developers who need exact timestamps.
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Absolute Time Extension v0.0.1</p>
+            <p>Converts GitHub's relative times to absolute dates for better precision</p>
+        </div>
+    </div>
+
+    <div class="save-notification" id="saveNotification">
+        Settings saved successfully!
+    </div>
+
+    <script src="options.js"></script>
+</body>
+</html> 
