@@ -47,7 +47,9 @@ const createSelectors = () => Object.freeze({
  */
 const createNotificationConfig = () => Object.freeze({
   success: {
-    message: 'Settings saved successfully!',
+    message: (typeof chrome !== 'undefined' && chrome.i18n) 
+      ? chrome.i18n.getMessage('notificationSaved') 
+      : 'Settings saved successfully!',
     background: '#10b981',
     duration: 3000,
   },
@@ -119,7 +121,9 @@ const createToggleConfig = (isActive) => Object.freeze({
 const loadSettings = async () => {
   try {
     const result = await chrome.storage.sync.get(defaultSettings);
-    return result || defaultSettings;
+    // Normalize settings to ensure only valid enum/boolean values are used
+    const coerced = window.absoluteTimeShared.coerceSettings(result || {});
+    return coerced;
   } catch (error) {
     console.error('Failed to load settings:', error);
     return defaultSettings;
@@ -379,7 +383,10 @@ const createToggleHandler = (settingKey) => async () => {
     await showSaveNotification();
   } catch (error) {
     console.error('Failed to toggle setting:', error);
-    await showErrorNotification('Failed to save settings');
+    const msg = (typeof chrome !== 'undefined' && chrome.i18n)
+      ? chrome.i18n.getMessage('notificationErrorSave')
+      : 'Failed to save settings';
+    await showErrorNotification(msg);
   }
 };
 
@@ -510,7 +517,10 @@ const initializeOptions = async () => {
   } catch (error) {
     console.error('Failed to initialize options page:', error);
     handleSettingsError();
-    await showErrorNotification('Failed to load settings');
+    const msg = (typeof chrome !== 'undefined' && chrome.i18n)
+      ? chrome.i18n.getMessage('errorLoadingSettingsOptions')
+      : 'Failed to load settings';
+    await showErrorNotification(msg);
     return { success: false, error };
   }
 };

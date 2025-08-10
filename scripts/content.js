@@ -190,15 +190,38 @@
    * @returns {HTMLElement} The formatted element
    */
   const formatSingleElement = (element, currentYear, currentSettings) => {
-    if (!needsFormatting(element)) {
-      return element;
-    }
-
     return [
       (el) => applyBaseFormatting(el, currentSettings),
       (el) => applyYearFormatting(el, currentYear, currentSettings),
       (el) => applyTimeFormatting(el, currentSettings)
     ].reduce((el, formatFn) => formatFn(el), element);
+  };
+
+  /**
+   * Reverts formatting applied by this extension
+   * @param {Function} logger - Logging function
+   * @returns {number} Number of elements reverted
+   */
+  const unformatRelativeTimes = (logger) => {
+    const formatted = document.querySelectorAll('relative-time[data-formatted="true"]');
+    const attributesToRemove = [
+      'format',
+      'format-style',
+      'weekday',
+      'hour',
+      'minute',
+      'second',
+      'data-formatted'
+    ];
+
+    formatted.forEach((el) => {
+      attributesToRemove.forEach((attr) => el.removeAttribute(attr));
+    });
+
+    if (formatted.length > 0) {
+      logger(`Reverted ${formatted.length} relative-time elements`);
+    }
+    return formatted.length;
   };
 
   /**
@@ -209,8 +232,9 @@
    */
   const formatRelativeTimes = (enabled, logger) => {
     if (!enabled) {
+      // When disabled, revert any previously formatted elements
       logger("Relative time formatting is disabled");
-      return 0;
+      return unformatRelativeTimes(logger);
     }
 
     if (isIgnoredRoute()) {
@@ -224,7 +248,6 @@
     const currentYear = getCurrentYear();
     
     const updatedElements = Array.from(timeElements)
-      .filter(needsFormatting)
       .map(element => formatSingleElement(element, currentYear, settings));
 
     const updatedCount = updatedElements.length;

@@ -86,7 +86,9 @@ const createToggleConfig = (isActive) => Object.freeze({
 const loadSettings = async () => {
   try {
     const result = await chrome.storage.sync.get(defaultSettings);
-    return result || defaultSettings;
+    // Coerce to valid enums/booleans in case of stale or corrupted values
+    const coerced = window.absoluteTimeShared.coerceSettings(result || {});
+    return coerced;
   } catch (error) {
     console.error('Failed to load settings:', error);
     return defaultSettings;
