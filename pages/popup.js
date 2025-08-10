@@ -7,10 +7,7 @@
  * Creates default settings object
  * @returns {Object} Default settings
  */
-const createDefaultSettings = () => Object.freeze({
-  enabled: true,
-  debug: false,
-});
+const createDefaultSettings = () => window.absoluteTimeShared.getDefaultSettings();
 
 /**
  * Creates UI element selectors object
@@ -22,6 +19,12 @@ const createSelectors = () => Object.freeze({
   statusIndicator: 'statusIndicator',
   statusText: 'statusText',
   optionsLink: 'optionsLink',
+  headerTitle: 'headerTitle',
+  headerSubtitle: 'headerSubtitle',
+  enableTitle: 'enableTitle',
+  enableDesc: 'enableDesc',
+  debugTitle: 'debugTitle',
+  debugDesc: 'debugDesc',
 });
 
 const defaultSettings = createDefaultSettings();
@@ -61,7 +64,7 @@ const getElementById = (elementId) => document.getElementById(elementId);
  */
 const createStatusConfig = (enabled) => Object.freeze({
   className: enabled ? 'status-indicator enabled' : 'status-indicator disabled',
-  text: enabled ? 'Extension Active' : 'Extension Disabled',
+  text: enabled ? chrome.i18n.getMessage('popupStatusEnabled') : chrome.i18n.getMessage('popupStatusDisabled'),
 });
 
 /**
@@ -91,51 +94,16 @@ const loadSettings = async () => {
 };
 
 /**
- * Saves settings to Chrome storage and notifies content scripts
+ * Saves settings to Chrome storage
  * @param {Object} settings - Settings to save
  * @returns {Promise<void>} Promise resolving when save is complete
  */
 const saveSettings = async (settings) => {
   try {
     await chrome.storage.sync.set(settings);
-    await notifyContentScripts(settings);
   } catch (error) {
     console.error('Failed to save settings:', error);
     throw error;
-  }
-};
-
-/**
- * Notifies content scripts of settings changes
- * @param {Object} settings - New settings
- * @returns {Promise<void>} Promise resolving when notifications are sent
- */
-const notifyContentScripts = async (settings) => {
-  try {
-    const tabs = await chrome.tabs.query({ url: '*://*.github.com/*' });
-    const notifications = tabs.map(tab => 
-      sendMessageToTab(tab.id, {
-        type: 'settingsChanged',
-        settings: settings
-      })
-    );
-    await Promise.allSettled(notifications);
-  } catch (error) {
-    console.error('Failed to notify content scripts:', error);
-  }
-};
-
-/**
- * Sends message to a specific tab
- * @param {number} tabId - Tab ID
- * @param {Object} message - Message to send
- * @returns {Promise<void>} Promise resolving when message is sent
- */
-const sendMessageToTab = async (tabId, message) => {
-  try {
-    await chrome.tabs.sendMessage(tabId, message);
-  } catch (error) {
-    // Ignore errors for tabs without content script
   }
 };
 //#endregion
@@ -152,6 +120,9 @@ const updateToggleClass = (element, isActive) => {
   element.className = 'toggle-switch';
   if (config.shouldAddActive) {
     element.classList.add('active');
+  }
+  if (element && typeof element.setAttribute === 'function') {
+    element.setAttribute('aria-checked', isActive ? 'true' : 'false');
   }
   return element;
 };
@@ -181,6 +152,12 @@ const updateUiElements = (settings) => {
     debugToggle: getElementById(selectors.debugToggle),
     statusIndicator: getElementById(selectors.statusIndicator),
     statusText: getElementById(selectors.statusText),
+    headerTitle: getElementById(selectors.headerTitle),
+    headerSubtitle: getElementById(selectors.headerSubtitle),
+    enableTitle: getElementById(selectors.enableTitle),
+    enableDesc: getElementById(selectors.enableDesc),
+    debugTitle: getElementById(selectors.debugTitle),
+    debugDesc: getElementById(selectors.debugDesc),
   };
 
   const updatedToggles = {
@@ -193,6 +170,22 @@ const updateUiElements = (settings) => {
     elements.statusText, 
     settings.enabled
   );
+
+  // Localize static strings
+  if (elements.headerTitle) elements.headerTitle.textContent = chrome.i18n.getMessage('popupHeaderTitle');
+  if (elements.headerSubtitle) elements.headerSubtitle.textContent = chrome.i18n.getMessage('popupHeaderSubtitle');
+  if (elements.enableTitle) elements.enableTitle.textContent = chrome.i18n.getMessage('popupEnableTitle');
+  if (elements.enableDesc) elements.enableDesc.textContent = chrome.i18n.getMessage('popupEnableDescription');
+  if (elements.debugTitle) elements.debugTitle.textContent = chrome.i18n.getMessage('popupDebugTitle');
+  if (elements.debugDesc) elements.debugDesc.textContent = chrome.i18n.getMessage('popupDebugDescription');
+
+  // Sync aria labels from i18n
+  if (elements.enabledToggle && typeof elements.enabledToggle.setAttribute === 'function') {
+    elements.enabledToggle.setAttribute('aria-label', chrome.i18n.getMessage('toggleAriaEnable'));
+  }
+  if (elements.debugToggle && typeof elements.debugToggle.setAttribute === 'function') {
+    elements.debugToggle.setAttribute('aria-label', chrome.i18n.getMessage('toggleAriaDebug'));
+  }
 
   return {
     toggles: updatedToggles,
@@ -239,7 +232,7 @@ const handleSettingsError = () => {
   
   if (statusIndicator && statusText) {
     statusIndicator.className = 'status-indicator disabled';
-    statusText.textContent = 'Error loading settings';
+    statusText.textContent = chrome.i18n.getMessage('errorLoadingSettings');
   }
 };
 //#endregion
@@ -262,13 +255,21 @@ const setupEventListeners = () => {
     optionsLink: createOptionsHandler(),
   };
 
-  if (elements.enabledToggle) {
-    elements.enabledToggle.addEventListener('click', handlers.enabledToggle);
-  }
-  if (elements.debugToggle) {
-    elements.debugToggle.addEventListener('click', handlers.debugToggle);
-  }
+  const addToggleA11y = (el, handler) => {
+    if (!el) return;
+    el.addEventListener('click', handler);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        handler();
+      }
+    });
+  };
+
+  addToggleA11y(elements.enabledToggle, handlers.enabledToggle);
+  addToggleA11y(elements.debugToggle, handlers.debugToggle);
   if (elements.optionsLink) {
+    elements.optionsLink.textContent = chrome.i18n.getMessage('popupOpenOptions');
     elements.optionsLink.addEventListener('click', handlers.optionsLink);
   }
 

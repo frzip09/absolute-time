@@ -103,6 +103,8 @@
         /* Toggle Switch Styles */
         .toggle-switch {
             position: relative;
+            display: inline-block;
+            vertical-align: middle;
             width: 52px;
             height: 28px;
             background: #d1d5db;
@@ -110,6 +112,12 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
             flex-shrink: 0;
+            border: none;
+            outline: none;
+            padding: 0;
+            -webkit-appearance: none;
+            appearance: none;
+            background-clip: padding-box;
         }
 
         .toggle-switch.active {
@@ -127,10 +135,15 @@
             border-radius: 50%;
             transition: transform 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
         }
 
         .toggle-switch.active::before {
             transform: translateX(24px);
+        }
+
+        .toggle-switch:focus-visible {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
         }
 
         .status-section {
@@ -226,9 +239,12 @@
             transform: translateX(100%);
             transition: transform 0.3s ease;
             z-index: 1000;
+            display: none;
+            pointer-events: none;
         }
 
         .save-notification.show {
+            display: block;
             transform: translateX(0);
         }
 
@@ -273,47 +289,41 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>⏰ Absolute Time Settings</h1>
-            <p>Configure how GitHub's relative times are converted to absolute dates</p>
+            <h1 id="headerTitle"></h1>
+            <p id="headerSubtitle"></p>
         </div>
 
         <div class="settings-card">
-            <h2 class="card-title">
-                ⚙️ Extension Settings
-            </h2>
+            <h2 class="card-title" id="mainCardTitle"></h2>
 
             <div class="setting-item">
                 <div class="setting-info">
-                    <div class="setting-title">Enable Extension</div>
+                    <div class="setting-title" id="enableTitle"></div>
                     <div class="setting-description">
-                        When enabled, the extension will automatically convert GitHub's relative time elements 
-                        (like "2 hours ago") to absolute datetime format (like "Dec 15, 2022 at 3:45 PM").
+                        <span id="enableDesc"></span>
                     </div>
                     <div class="setting-details">
-                        This affects all relative-time elements on GitHub pages including commits, issues, and pull requests.
+                        <span id="enableDetails"></span>
                     </div>
                 </div>
-                <div class="toggle-switch" id="enabledToggle"></div>
+                <button class="toggle-switch" id="enabledToggle" role="switch" aria-checked="false" aria-label="Enable extension" tabindex="0"></button>
             </div>
 
             <div class="setting-item">
                 <div class="setting-info">
-                    <div class="setting-title">Debug Mode</div>
+                    <div class="setting-title" id="debugTitle"></div>
                     <div class="setting-description">
-                        Enable debug logging to the browser console. Useful for troubleshooting issues 
-                        or understanding how the extension processes relative time elements.
+                        <span id="debugDesc"></span>
                     </div>
                     <div class="setting-details">
-                        Debug messages will appear in the browser's developer console (F12 → Console tab).
+                        <span id="debugDetails"></span>
                     </div>
                 </div>
-                <div class="toggle-switch" id="debugToggle"></div>
+                <button class="toggle-switch" id="debugToggle" role="switch" aria-checked="false" aria-label="Enable debug mode" tabindex="0"></button>
             </div>
 
             <div class="status-section">
-                <div class="status-title">
-                    📊 Current Status
-                </div>
+                <div class="status-title" id="statusTitle"></div>
                 <div class="status-indicator" id="statusIndicator">
                     <div class="status-dot"></div>
                     <span id="statusText">Loading...</span>
@@ -322,15 +332,67 @@
         </div>
 
         <div class="settings-card">
-            <h2 class="card-title">
-                📖 How It Works
-            </h2>
+            <h2 class="card-title" id="preferencesTitle"></h2>
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title" id="showTimeTitle"></div>
+                    <div class="setting-description" id="showTimeDesc"></div>
+                </div>
+                <select id="showTimeSelect" aria-label="" >
+                    <option value="never" id="showTimeOptNever"></option>
+                    <option value="actionsOnly" id="showTimeOptActionsOnly"></option>
+                    <option value="always" id="showTimeOptAlways"></option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title" id="showWeekdayTitle"></div>
+                    <div class="setting-description" id="showWeekdayDesc"></div>
+                </div>
+                <select id="showWeekdaySelect" aria-label="">
+                    <option value="never" id="showWeekdayOptNever"></option>
+                    <option value="olderYears" id="showWeekdayOptOlderYears"></option>
+                    <option value="always" id="showWeekdayOptAlways"></option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title" id="dateStyleTitle"></div>
+                    <div class="setting-description" id="dateStyleDesc"></div>
+                </div>
+                <select id="dateStyleSelect" aria-label="">
+                    <option value="short" id="dateStyleOptShort"></option>
+                    <option value="medium" id="dateStyleOptMedium"></option>
+                    <option value="long" id="dateStyleOptLong"></option>
+                </select>
+            </div>
+
+            <div class="setting-item">
+                <div class="setting-info">
+                    <div class="setting-title" id="includeSecondsTitle"></div>
+                    <div class="setting-description" id="includeSecondsDesc"></div>
+                </div>
+                <button type="button" class="toggle-switch" id="includeSecondsToggle" role="switch" aria-checked="false" aria-label="" tabindex="0"></button>
+            </div>
+            </div>
+
+            <div class="settings-card">
+            <h2 class="card-title" id="dangerZoneTitle"></h2>
+            <div class="setting-item" style="justify-content: flex-end">
+                <button id="resetDefaultsButton" aria-label="" style="background:#ef4444;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer"></button>
+            </div>
+            </div>
+
+            <div class="settings-card">
+            <h2 class="card-title" id="howItWorks"></h2>
             <p style="margin-bottom: 16px; color: #6b7280;">
-                This extension modifies GitHub's relative-time elements to show absolute dates instead of relative ones.
+                <span id="howItWorksDesc"></span>
             </p>
 
             <div class="example-section">
-                <div class="example-title">Examples of conversions:</div>
+                <div class="example-title" id="examplesTitle"></div>
                 <div class="example-item">
                     <span class="example-before">"2 hours ago"</span>
                     <span class="example-arrow">→</span>
@@ -364,15 +426,17 @@
         </div>
 
         <div class="footer">
-            <p>Absolute Time Extension v0.0.1</p>
-            <p>Converts GitHub's relative times to absolute dates for better precision</p>
+            <p id="footerLine1"></p>
+            <p id="footerLine2"></p>
+            <p><a id="repoLink" href="https://github.com/frzip09/absolute-time" target="_blank" rel="noopener noreferrer" style="color:#3b82f6; text-decoration:none"></a></p>
         </div>
     </div>
 
-    <div class="save-notification" id="saveNotification">
+    <div class="save-notification" id="saveNotification" role="status" aria-live="polite" aria-atomic="true">
         Settings saved successfully!
     </div>
 
+    <script src="../scripts/sharedSettings.js"></script>
     <script src="options.js"></script>
 </body>
 </html> 

@@ -7,10 +7,7 @@
  * Creates default settings object
  * @returns {Object} Default settings
  */
-const createDefaultSettings = () => Object.freeze({
-  enabled: true,
-  debug: false,
-});
+const createDefaultSettings = () => window.absoluteTimeShared.getDefaultSettings();
 
 /**
  * Creates UI element selectors object
@@ -22,6 +19,26 @@ const createSelectors = () => Object.freeze({
   statusIndicator: 'statusIndicator',
   statusText: 'statusText',
   saveNotification: 'saveNotification',
+  headerTitle: 'headerTitle',
+  headerSubtitle: 'headerSubtitle',
+  mainCardTitle: 'mainCardTitle',
+  dateStyleSelect: 'dateStyleSelect',
+  showWeekdaySelect: 'showWeekdaySelect',
+  showTimeSelect: 'showTimeSelect',
+  includeSecondsToggle: 'includeSecondsToggle',
+  resetDefaultsButton: 'resetDefaultsButton',
+  enableTitle: 'enableTitle',
+  enableDesc: 'enableDesc',
+  enableDetails: 'enableDetails',
+  debugTitle: 'debugTitle',
+  debugDesc: 'debugDesc',
+  debugDetails: 'debugDetails',
+  statusTitle: 'statusTitle',
+  howItWorks: 'howItWorks',
+  howItWorksDesc: 'howItWorksDesc',
+  examplesTitle: 'examplesTitle',
+  footerLine1: 'footerLine1',
+  footerLine2: 'footerLine2',
 });
 
 /**
@@ -79,8 +96,8 @@ const getElementById = (elementId) => document.getElementById(elementId);
 const createStatusConfig = (enabled) => Object.freeze({
   className: enabled ? 'status-indicator enabled' : 'status-indicator disabled',
   text: enabled 
-    ? 'Extension Active - Converting relative times to absolute dates'
-    : 'Extension Disabled - Relative times will display as normal',
+    ? chrome.i18n.getMessage('optionsStatusEnabled')
+    : chrome.i18n.getMessage('optionsStatusDisabled'),
 });
 
 /**
@@ -110,51 +127,16 @@ const loadSettings = async () => {
 };
 
 /**
- * Saves settings to Chrome storage and notifies content scripts
+ * Saves settings to Chrome storage
  * @param {Object} settings - Settings to save
  * @returns {Promise<void>} Promise resolving when save is complete
  */
 const saveSettings = async (settings) => {
   try {
     await chrome.storage.sync.set(settings);
-    await notifyContentScripts(settings);
   } catch (error) {
     console.error('Failed to save settings:', error);
     throw error;
-  }
-};
-
-/**
- * Notifies content scripts of settings changes
- * @param {Object} settings - New settings
- * @returns {Promise<void>} Promise resolving when notifications are sent
- */
-const notifyContentScripts = async (settings) => {
-  try {
-    const tabs = await chrome.tabs.query({ url: '*://*.github.com/*' });
-    const notifications = tabs.map(tab => 
-      sendMessageToTab(tab.id, {
-        type: 'settingsChanged',
-        settings: settings
-      })
-    );
-    await Promise.allSettled(notifications);
-  } catch (error) {
-    console.error('Failed to notify content scripts:', error);
-  }
-};
-
-/**
- * Sends message to a specific tab
- * @param {number} tabId - Tab ID
- * @param {Object} message - Message to send
- * @returns {Promise<void>} Promise resolving when message is sent
- */
-const sendMessageToTab = async (tabId, message) => {
-  try {
-    await chrome.tabs.sendMessage(tabId, message);
-  } catch (error) {
-    // Ignore errors for tabs without content script
   }
 };
 //#endregion
@@ -171,6 +153,9 @@ const updateToggleClass = (element, isActive) => {
   element.className = 'toggle-switch';
   if (config.shouldAddActive) {
     element.classList.add('active');
+  }
+  if (element && typeof element.setAttribute === 'function') {
+    element.setAttribute('aria-checked', isActive ? 'true' : 'false');
   }
   return element;
 };
@@ -200,6 +185,47 @@ const updateUiElements = (settings) => {
     debugToggle: getElementById(selectors.debugToggle),
     statusIndicator: getElementById(selectors.statusIndicator),
     statusText: getElementById(selectors.statusText),
+    headerTitle: getElementById(selectors.headerTitle),
+    headerSubtitle: getElementById(selectors.headerSubtitle),
+    mainCardTitle: getElementById(selectors.mainCardTitle),
+    enableTitle: getElementById(selectors.enableTitle),
+    enableDesc: getElementById(selectors.enableDesc),
+    enableDetails: getElementById(selectors.enableDetails),
+    debugTitle: getElementById(selectors.debugTitle),
+    debugDesc: getElementById(selectors.debugDesc),
+    debugDetails: getElementById(selectors.debugDetails),
+    statusTitle: getElementById(selectors.statusTitle),
+    howItWorks: getElementById(selectors.howItWorks),
+    howItWorksDesc: getElementById(selectors.howItWorksDesc),
+    examplesTitle: getElementById(selectors.examplesTitle),
+    footerLine1: getElementById(selectors.footerLine1),
+    footerLine2: getElementById(selectors.footerLine2),
+    repoLink: document.getElementById('repoLink'),
+    dateStyleSelect: getElementById(selectors.dateStyleSelect),
+    showWeekdaySelect: getElementById(selectors.showWeekdaySelect),
+    showTimeSelect: getElementById(selectors.showTimeSelect),
+    includeSecondsToggle: getElementById(selectors.includeSecondsToggle),
+    resetDefaultsButton: getElementById(selectors.resetDefaultsButton),
+    preferencesTitle: document.getElementById('preferencesTitle'),
+    showTimeTitle: document.getElementById('showTimeTitle'),
+    showTimeDesc: document.getElementById('showTimeDesc'),
+    showTimeOptNever: document.getElementById('showTimeOptNever'),
+    showTimeOptActionsOnly: document.getElementById('showTimeOptActionsOnly'),
+    showTimeOptAlways: document.getElementById('showTimeOptAlways'),
+    showWeekdayTitle: document.getElementById('showWeekdayTitle'),
+    showWeekdayDesc: document.getElementById('showWeekdayDesc'),
+    showWeekdayOptNever: document.getElementById('showWeekdayOptNever'),
+    showWeekdayOptOlderYears: document.getElementById('showWeekdayOptOlderYears'),
+    showWeekdayOptAlways: document.getElementById('showWeekdayOptAlways'),
+    dateStyleTitle: document.getElementById('dateStyleTitle'),
+    dateStyleDesc: document.getElementById('dateStyleDesc'),
+    dateStyleOptShort: document.getElementById('dateStyleOptShort'),
+    dateStyleOptMedium: document.getElementById('dateStyleOptMedium'),
+    dateStyleOptLong: document.getElementById('dateStyleOptLong'),
+    includeSecondsTitle: document.getElementById('includeSecondsTitle'),
+    includeSecondsDesc: document.getElementById('includeSecondsDesc'),
+    dangerZoneTitle: document.getElementById('dangerZoneTitle'),
+    // import/export removed
   };
 
   const updatedToggles = {
@@ -212,6 +238,70 @@ const updateUiElements = (settings) => {
     elements.statusText, 
     settings.enabled
   );
+
+  // Localize static strings
+  if (elements.headerTitle) elements.headerTitle.textContent = chrome.i18n.getMessage('optionsHeaderTitle');
+  if (elements.headerSubtitle) elements.headerSubtitle.textContent = chrome.i18n.getMessage('optionsHeaderSubtitle');
+  if (elements.mainCardTitle) elements.mainCardTitle.textContent = chrome.i18n.getMessage('optionsCardTitleMain');
+  if (elements.enableTitle) elements.enableTitle.textContent = chrome.i18n.getMessage('optionsEnableTitle');
+  if (elements.enableDesc) elements.enableDesc.textContent = chrome.i18n.getMessage('optionsEnableDesc');
+  if (elements.enableDetails) elements.enableDetails.textContent = chrome.i18n.getMessage('optionsEnableDetails');
+  if (elements.debugTitle) elements.debugTitle.textContent = chrome.i18n.getMessage('optionsDebugTitle');
+  if (elements.debugDesc) elements.debugDesc.textContent = chrome.i18n.getMessage('optionsDebugDesc');
+  if (elements.debugDetails) elements.debugDetails.textContent = chrome.i18n.getMessage('optionsDebugDetails');
+  if (elements.statusTitle) elements.statusTitle.textContent = chrome.i18n.getMessage('optionsStatusTitle');
+  if (elements.howItWorks) elements.howItWorks.textContent = chrome.i18n.getMessage('optionsHowItWorks');
+  if (elements.howItWorksDesc) elements.howItWorksDesc.textContent = chrome.i18n.getMessage('optionsHowItWorksDesc');
+  if (elements.examplesTitle) elements.examplesTitle.textContent = chrome.i18n.getMessage('optionsExamplesTitle');
+  if (elements.footerLine1) elements.footerLine1.textContent = chrome.i18n.getMessage('optionsFooterLine1');
+  if (elements.footerLine2) elements.footerLine2.textContent = chrome.i18n.getMessage('optionsFooterLine2');
+  if (elements.repoLink) elements.repoLink.textContent = chrome.i18n.getMessage('repoLinkLabel');
+
+  // Sync aria labels from i18n
+  if (elements.enabledToggle && typeof elements.enabledToggle.setAttribute === 'function') {
+    elements.enabledToggle.setAttribute('aria-label', chrome.i18n.getMessage('toggleAriaEnable'));
+  }
+  if (elements.debugToggle && typeof elements.debugToggle.setAttribute === 'function') {
+    elements.debugToggle.setAttribute('aria-label', chrome.i18n.getMessage('toggleAriaDebug'));
+  }
+  if (elements.includeSecondsToggle && typeof elements.includeSecondsToggle.setAttribute === 'function') {
+    elements.includeSecondsToggle.setAttribute('aria-label', chrome.i18n.getMessage('toggleAriaIncludeSeconds'));
+  }
+  if (elements.showTimeSelect) elements.showTimeSelect.setAttribute('aria-label', chrome.i18n.getMessage('showTimeAria'));
+  if (elements.showWeekdaySelect) elements.showWeekdaySelect.setAttribute('aria-label', chrome.i18n.getMessage('showWeekdayAria'));
+  if (elements.dateStyleSelect) elements.dateStyleSelect.setAttribute('aria-label', chrome.i18n.getMessage('dateStyleAria'));
+
+  // Localize new section labels and options
+  if (elements.preferencesTitle) elements.preferencesTitle.textContent = chrome.i18n.getMessage('preferencesTitle');
+  if (elements.showTimeTitle) elements.showTimeTitle.textContent = chrome.i18n.getMessage('showTimeTitle');
+  if (elements.showTimeDesc) elements.showTimeDesc.textContent = chrome.i18n.getMessage('showTimeDesc');
+  if (elements.showTimeOptNever) elements.showTimeOptNever.textContent = chrome.i18n.getMessage('showTimeOptNever');
+  if (elements.showTimeOptActionsOnly) elements.showTimeOptActionsOnly.textContent = chrome.i18n.getMessage('showTimeOptActionsOnly');
+  if (elements.showTimeOptAlways) elements.showTimeOptAlways.textContent = chrome.i18n.getMessage('showTimeOptAlways');
+  if (elements.showWeekdayTitle) elements.showWeekdayTitle.textContent = chrome.i18n.getMessage('showWeekdayTitle');
+  if (elements.showWeekdayDesc) elements.showWeekdayDesc.textContent = chrome.i18n.getMessage('showWeekdayDesc');
+  if (elements.showWeekdayOptNever) elements.showWeekdayOptNever.textContent = chrome.i18n.getMessage('showWeekdayOptNever');
+  if (elements.showWeekdayOptOlderYears) elements.showWeekdayOptOlderYears.textContent = chrome.i18n.getMessage('showWeekdayOptOlderYears');
+  if (elements.showWeekdayOptAlways) elements.showWeekdayOptAlways.textContent = chrome.i18n.getMessage('showWeekdayOptAlways');
+  if (elements.dateStyleTitle) elements.dateStyleTitle.textContent = chrome.i18n.getMessage('dateStyleTitle');
+  if (elements.dateStyleDesc) elements.dateStyleDesc.textContent = chrome.i18n.getMessage('dateStyleDesc');
+  if (elements.dateStyleOptShort) elements.dateStyleOptShort.textContent = chrome.i18n.getMessage('dateStyleOptShort');
+  if (elements.dateStyleOptMedium) elements.dateStyleOptMedium.textContent = chrome.i18n.getMessage('dateStyleOptMedium');
+  if (elements.dateStyleOptLong) elements.dateStyleOptLong.textContent = chrome.i18n.getMessage('dateStyleOptLong');
+  if (elements.includeSecondsTitle) elements.includeSecondsTitle.textContent = chrome.i18n.getMessage('includeSecondsTitle');
+  if (elements.includeSecondsDesc) elements.includeSecondsDesc.textContent = chrome.i18n.getMessage('includeSecondsDesc');
+  if (elements.dangerZoneTitle) elements.dangerZoneTitle.textContent = chrome.i18n.getMessage('dangerZoneTitle');
+  if (elements.resetDefaultsButton) {
+    elements.resetDefaultsButton.textContent = chrome.i18n.getMessage('resetDefaults');
+    elements.resetDefaultsButton.setAttribute('aria-label', chrome.i18n.getMessage('resetDefaults'));
+  }
+  // import/export removed
+
+  // Sync new control values
+  if (elements.dateStyleSelect) elements.dateStyleSelect.value = settings.dateStyle || 'short';
+  if (elements.showWeekdaySelect) elements.showWeekdaySelect.value = settings.showWeekday || 'olderYears';
+  if (elements.showTimeSelect) elements.showTimeSelect.value = settings.showTime || 'actionsOnly';
+  if (elements.includeSecondsToggle) updateToggleClass(elements.includeSecondsToggle, !!settings.includeSeconds);
 
   return {
     toggles: updatedToggles,
@@ -265,11 +355,11 @@ const showErrorNotification = async (message) => {
     };
     
     await showNotification(notification, errorConfig);
-    
+    // Reset content after it hides; keep element hidden
     setTimeout(() => {
       notification.textContent = notificationConfig.success.message;
       notification.style.background = notificationConfig.success.background;
-    }, 300);
+    }, 350);
   }
 };
 //#endregion
@@ -303,7 +393,7 @@ const handleSettingsError = () => {
   
   if (statusIndicator && statusText) {
     statusIndicator.className = 'status-indicator disabled';
-    statusText.textContent = 'Error loading settings - Please refresh the page';
+    statusText.textContent = chrome.i18n.getMessage('errorLoadingSettingsOptions');
   }
 };
 //#endregion
@@ -317,19 +407,74 @@ const setupEventListeners = () => {
   const elements = {
     enabledToggle: getElementById(selectors.enabledToggle),
     debugToggle: getElementById(selectors.debugToggle),
+    dateStyleSelect: getElementById(selectors.dateStyleSelect),
+    showWeekdaySelect: getElementById(selectors.showWeekdaySelect),
+    showTimeSelect: getElementById(selectors.showTimeSelect),
+    includeSecondsToggle: getElementById(selectors.includeSecondsToggle),
+    resetDefaultsButton: getElementById(selectors.resetDefaultsButton),
   };
 
   const handlers = {
     enabledToggle: createToggleHandler('enabled'),
     debugToggle: createToggleHandler('debug'),
+    includeSecondsToggle: createToggleHandler('includeSeconds'),
   };
 
-  if (elements.enabledToggle) {
-    elements.enabledToggle.addEventListener('click', handlers.enabledToggle);
+  const addToggleA11y = (el, handler) => {
+    if (!el) return;
+    el.addEventListener('click', handler);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        handler();
+      }
+    });
+  };
+
+  addToggleA11y(elements.enabledToggle, handlers.enabledToggle);
+  addToggleA11y(elements.debugToggle, handlers.debugToggle);
+  addToggleA11y(elements.includeSecondsToggle, handlers.includeSecondsToggle);
+
+  if (elements.dateStyleSelect) {
+    elements.dateStyleSelect.addEventListener('change', async (e) => {
+      const current = await loadSettings();
+      const next = updateSettings(current, { dateStyle: e.target.value });
+      await saveSettings(next);
+      updateUiElements(next);
+      await showSaveNotification();
+    });
   }
-  if (elements.debugToggle) {
-    elements.debugToggle.addEventListener('click', handlers.debugToggle);
+
+  if (elements.showWeekdaySelect) {
+    elements.showWeekdaySelect.addEventListener('change', async (e) => {
+      const current = await loadSettings();
+      const next = updateSettings(current, { showWeekday: e.target.value });
+      await saveSettings(next);
+      updateUiElements(next);
+      await showSaveNotification();
+    });
   }
+
+  if (elements.showTimeSelect) {
+    elements.showTimeSelect.addEventListener('change', async (e) => {
+      const current = await loadSettings();
+      const next = updateSettings(current, { showTime: e.target.value });
+      await saveSettings(next);
+      updateUiElements(next);
+      await showSaveNotification();
+    });
+  }
+
+  if (elements.resetDefaultsButton) {
+    elements.resetDefaultsButton.addEventListener('click', async () => {
+      const defaults = createDefaultSettings();
+      await saveSettings(defaults);
+      updateUiElements(defaults);
+      await showSaveNotification();
+    });
+  }
+
+  // import/export removed
 
   return { elements, handlers };
 };

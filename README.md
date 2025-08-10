@@ -1,43 +1,30 @@
-# Absolute Time for GitHub
+## Absolute Time for GitHub
 
-*Because “3 days ago” tells you absolutely nothing when you're trying to figure out if that critical bug was introduced before or after the weekend deployment.*
+Stop guessing what “3 days ago” means when you’re debugging or reviewing changes. This extension replaces GitHub’s relative timestamps with absolute dates/times where it matters.
 
----
-
-## 🧠 What This Does
-
-This Chrome extension fixes GitHub's... *creative* decision to show you relative timestamps like "2 weeks ago" instead of, you know, **the actual date and time something happened**.
-
-Say goodbye to:
-- "3 days ago" ← Was that Tuesday? Wednesday? Who knows!
-- "2 weeks ago" ← Could be anywhere from 8 to 21 days
-- "last month" ← Cool. So... when?
-
-Say hello to:
-- "Thu, Dec 15, 06:40 PM" ← Definitely after the deployment
-- "Wed, Nov 6, 2024" ← That was before we changed the API
-
----
-
-## 📦 How to Use It
+### Features
+- Replaces `<relative-time>` with absolute dates across GitHub
+- Resilient to SPA navigation (Turbo/PJAX) and dynamic DOM updates
+- Zero tracking, zero network calls; settings sync via Chrome storage
 
 ### Installation
 1. Download or clone this repository
-2. Open Chrome and go to `chrome://extensions`
-3. Enable **Developer mode** (top right)
-4. Click **Load unpacked** and select the folder
-5. Visit GitHub and enjoy not being gaslit by "2 days ago"
+2. Open `chrome://extensions`
+3. Enable Developer mode
+4. Click “Load unpacked” and select this folder
 
-### What You'll See
-- **Recent events**: `Thu, Jun 26`
-- **Older events**: `Wed, Nov 6, 2024`
+### What you'll see
+- Recent events: concise dates
+- Older events: include year
 
 ### Settings
-Click the extension icon for quick toggles:
-- Turn the feature on or off
-- Enable debug mode if you're curious (or something breaks)
-
-Right-click the icon → “Options” to access full settings.
+- Popup: quick toggles (enable/disable, debug)
+- Options:
+  - dateStyle: short | medium | long (default short)
+  - showWeekday: never | olderYears | always (default olderYears)
+  - showTime: never | actionsOnly | always (default actionsOnly)
+  - includeSeconds: boolean (default false)
+  - Reset to defaults
 
 ---
 
@@ -67,18 +54,20 @@ The extension is **intentionally disabled** on certain GitHub pages where precis
 
 ## ⚙️ Technical Notes
 
-For the curious devs:
-- Built with **Manifest V3**
-- **No frameworks**, just JavaScript and Chrome's Extension APIs
-- Handles **SPA navigation** and **dynamic content injection**
+- Manifest V3, plain JavaScript
+- Handles SPA navigation and dynamic content injection
 - Minimal footprint, no trackers, no nonsense
+
+### 🔒 Permissions
+- storage
+- Hosts: `https://github.com/*`, `https://*.github.com/*`
 
 ---
 
 ## 🤔 FAQ
 
-**Q: Why not just hover to see the time?**  
-A: 🙄 Hovering is for cowards and timestamp apologists.
+**Q: Why not just hover to see the time?**  \
+A: Hovering is slow when you’re scanning lists. Absolute time is glanceable.
 
 **Q: Doesn't GitHub show absolute time sometimes?**  
 A: Inconsistently. And usually not when you're scanning a list of commits or comments.
@@ -86,8 +75,8 @@ A: Inconsistently. And usually not when you're scanning a list of commits or com
 **Q: Mobile support?**  
 A: Chrome extensions don’t work on mobile. Complain to your browser vendor.
 
-**Q: Can I contribute?**  
-A: Yes. The code is simple and boring. That’s the point. Fork, PR, scream into the void.
+**Q: Can I contribute?**  \
+A: Yes. Keep it simple.
 
 ---
 

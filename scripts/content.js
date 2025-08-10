@@ -6,10 +6,7 @@
    * Creates default settings configuration
    * @returns {Object} Default settings
    */
-  const createDefaultSettings = () => Object.freeze({
-    enabled: true,
-    debug: false,
-  });
+  const createDefaultSettings = () => window.absoluteTimeShared.getDefaultSettings();
 
   /**
    * Creates new settings object with updates
@@ -29,13 +26,12 @@
    * @param {boolean} debugEnabled - Whether debug logging is enabled
    * @returns {Function} Logging function
    */
-  const createLogger = (debugEnabled) => (message) => {
+  const createLogger = (debugEnabled) => (...args) => {
     if (debugEnabled) {
-      console.log("[absolute-time]", message);
+      console.log("[absolute-time]", ...args);
     }
   };
 
-  const log = createLogger(settings.debug);
   //#endregion
 
   //#region Settings Management
@@ -46,40 +42,36 @@
   const loadSettings = () => {
     if (typeof chrome !== "undefined" && chrome.storage) {
       return new Promise((resolve) => {
-        chrome.storage.sync.get(settings, (loadedSettings) => {
-          if (loadedSettings) {
-            resolve(loadedSettings);
-          } else {
-            resolve(createDefaultSettings());
-          }
+        chrome.storage.sync.get(createDefaultSettings(), (loadedSettings) => {
+          const normalized = (typeof window !== 'undefined' && window.absoluteTimeShared)
+            ? window.absoluteTimeShared.coerceSettings(loadedSettings)
+            : Object.freeze({ ...createDefaultSettings(), ...loadedSettings });
+          resolve(normalized);
         });
       });
     }
     return Promise.resolve(createDefaultSettings());
   };
 
-  /**
-   * Handles settings change messages
-   * @param {Object} message - Message object
-   * @returns {Object|null} New settings or null if not a settings message
-   */
-  const handleSettingsMessage = (message) => {
-    if (message.type === "settingsChanged") {
-      return message.settings;
-    }
-    return null;
-  };
+  // No runtime message listeners are needed. Content script reacts to
+  // settings via chrome.storage.onChanged exclusively.
 
   /**
-   * Sets up message listener for settings changes
+   * Sets up storage change listener to react to settings updates
    * @param {Function} onSettingsChange - Callback for settings changes
    */
-  const setupMessageListener = (onSettingsChange) => {
-    if (typeof chrome !== "undefined" && chrome.runtime) {
-      chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-        const newSettings = handleSettingsMessage(message);
-        if (newSettings) {
-          onSettingsChange(newSettings);
+  const setupStorageChangeListener = (onSettingsChange) => {
+    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+      chrome.storage.onChanged.addListener((changes, namespace) => {
+        if (namespace !== "sync") return;
+        const updated = {};
+        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds"].forEach((key) => {
+          if (Object.prototype.hasOwnProperty.call(changes, key)) {
+            updated[key] = changes[key].newValue;
+          }
+        });
+        if (Object.keys(updated).length > 0) {
+          onSettingsChange(updated);
         }
       });
     }
@@ -138,9 +130,10 @@
    * @param {HTMLElement} element - The relative-time element
    * @returns {HTMLElement} The formatted element
    */
-  const applyBaseFormatting = (element) => {
+  const applyBaseFormatting = (element, currentSettings) => {
     element.setAttribute("format", "datetime");
-    element.setAttribute("format-style", "short");
+    const style = currentSettings?.dateStyle || "short";
+    element.setAttribute("format-style", style);
     element.setAttribute("data-formatted", "true");
     return element;
   };
@@ -151,10 +144,15 @@
    * @param {number} currentYear - Current year
    * @returns {HTMLElement} The formatted element
    */
-  const applyYearFormatting = (element, currentYear) => {
+  const applyYearFormatting = (element, currentYear, currentSettings) => {
+    const policy = currentSettings?.showWeekday || "olderYears";
     const elementYear = getElementYear(element);
-    if (elementYear < currentYear) {
+    const shouldShowWeekday =
+      policy === "always" || (policy === "olderYears" && elementYear < currentYear);
+    if (shouldShowWeekday) {
       element.setAttribute("weekday", "narrow");
+    } else {
+      element.removeAttribute("weekday");
     }
     return element;
   };
@@ -164,10 +162,23 @@
    * @param {HTMLElement} element - The relative-time element
    * @returns {HTMLElement} The formatted element
    */
-  const applyTimeFormatting = (element) => {
-    if (isActionPage()) {
+  const applyTimeFormatting = (element, currentSettings) => {
+    const policy = currentSettings?.showTime || "actionsOnly";
+    const shouldShowTime =
+      policy === "always" || (policy === "actionsOnly" && isActionPage());
+
+    if (shouldShowTime) {
       element.setAttribute("hour", "2-digit");
       element.setAttribute("minute", "2-digit");
+      if (currentSettings?.includeSeconds) {
+        element.setAttribute("second", "2-digit");
+      } else {
+        element.removeAttribute("second");
+      }
+    } else {
+      element.removeAttribute("hour");
+      element.removeAttribute("minute");
+      element.removeAttribute("second");
     }
     return element;
   };
@@ -178,15 +189,15 @@
    * @param {number} currentYear - Current year
    * @returns {HTMLElement} The formatted element
    */
-  const formatSingleElement = (element, currentYear) => {
+  const formatSingleElement = (element, currentYear, currentSettings) => {
     if (!needsFormatting(element)) {
       return element;
     }
 
     return [
-      applyBaseFormatting,
-      (el) => applyYearFormatting(el, currentYear),
-      applyTimeFormatting
+      (el) => applyBaseFormatting(el, currentSettings),
+      (el) => applyYearFormatting(el, currentYear, currentSettings),
+      (el) => applyTimeFormatting(el, currentSettings)
     ].reduce((el, formatFn) => formatFn(el), element);
   };
 
@@ -214,7 +225,7 @@
     
     const updatedElements = Array.from(timeElements)
       .filter(needsFormatting)
-      .map(element => formatSingleElement(element, currentYear));
+      .map(element => formatSingleElement(element, currentYear, settings));
 
     const updatedCount = updatedElements.length;
     
@@ -307,9 +318,11 @@
       settings = updateSettings(settings, newSettings);
       const updatedLogger = createLogger(settings.debug);
       updatedLogger("Settings changed", JSON.stringify(settings));
+      // Apply formatting immediately after settings change
+      formatWithCurrentSettings();
     };
 
-    setupMessageListener(handleSettingsChange);
+    setupStorageChangeListener(handleSettingsChange);
 
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", formatWithCurrentSettings);
@@ -342,11 +355,16 @@
       });
     }
 
-    document.addEventListener("turbo:load", () => {
+    const navHandler = () => {
       const navLogger = createLogger(settings.debug);
       navLogger("GitHub navigation event detected, formatting relative times");
       setTimeout(formatWithCurrentSettings, 1000);
-    });
+    };
+
+    document.addEventListener("turbo:load", navHandler);
+    document.addEventListener("turbo:render", navHandler);
+    document.addEventListener("turbo:frame-load", navHandler);
+    document.addEventListener("pjax:end", navHandler);
 
     logger("absolute-time initialized");
   };

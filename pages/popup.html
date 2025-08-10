@@ -79,6 +79,8 @@
         /* Toggle Switch Styles */
         .toggle-switch {
             position: relative;
+            display: inline-block;
+            vertical-align: middle;
             width: 44px;
             height: 24px;
             background: #d1d5db;
@@ -86,6 +88,12 @@
             cursor: pointer;
             transition: background-color 0.3s ease;
             margin-left: 12px;
+            border: none;
+            outline: none;
+            padding: 0;
+            -webkit-appearance: none;
+            appearance: none;
+            background-clip: padding-box;
         }
 
         .toggle-switch.active {
@@ -103,10 +111,15 @@
             border-radius: 50%;
             transition: transform 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
         }
 
         .toggle-switch.active::before {
             transform: translateX(20px);
+        }
+
+        .toggle-switch:focus-visible {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35);
         }
 
         .footer {
@@ -160,26 +173,26 @@
 </head>
 <body>
     <div class="header">
-        <h1>⏰ Absolute Time</h1>
-        <p>Convert relative times to absolute dates</p>
+        <h1 id="headerTitle"></h1>
+        <p id="headerSubtitle"></p>
     </div>
 
     <div class="content">
         <div class="setting-group">
             <div class="setting-item">
                 <div class="setting-info">
-                    <div class="setting-title">Enable Extension</div>
-                    <div class="setting-description">Convert GitHub's relative times to absolute dates</div>
+                    <div class="setting-title" id="enableTitle"></div>
+                    <div class="setting-description" id="enableDesc"></div>
                 </div>
-                <div class="toggle-switch" id="enabledToggle"></div>
+                <button type="button" class="toggle-switch" id="enabledToggle" role="switch" aria-checked="false" aria-label="Enable extension" tabindex="0"></button>
             </div>
 
             <div class="setting-item">
                 <div class="setting-info">
-                    <div class="setting-title">Debug Mode</div>
-                    <div class="setting-description">Show debug messages in browser console</div>
+                    <div class="setting-title" id="debugTitle"></div>
+                    <div class="setting-description" id="debugDesc"></div>
                 </div>
-                <div class="toggle-switch" id="debugToggle"></div>
+                <button type="button" class="toggle-switch" id="debugToggle" role="switch" aria-checked="false" aria-label="Enable debug mode" tabindex="0"></button>
             </div>
         </div>
 
@@ -190,9 +203,10 @@
     </div>
 
     <div class="footer">
-        <a href="#" class="footer-link" id="optionsLink">Open Full Settings</a>
+        <a href="#" class="footer-link" id="optionsLink"></a>
     </div>
 
+    <script src="../scripts/sharedSettings.js"></script>
     <script src="popup.js"></script>
 </body>
 </html> 
