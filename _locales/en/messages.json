@@ -67,5 +67,37 @@
 
   "dangerZoneTitle": { "message": "Danger zone" },
   "resetDefaults": { "message": "Reset to defaults" },
-  "repoLinkLabel": { "message": "View repository" }
+  "repoLinkLabel": { "message": "View repository" },
+
+  "livePreviewTitle": { "message": "🔍 Live Preview" },
+  "livePreviewDesc": { "message": "See how timestamps will appear with your current settings:" },
+  "previewRecent": { "message": "Recent (2 hours ago)" },
+  "previewThisWeek": { "message": "This week (3 days ago)" },
+  "previewOlderYear": { "message": "Previous year" },
+  "previewAction": { "message": "Actions page timestamp" },
+
+  "selectorTargetingTitle": { "message": "🎯 Selector Targeting" },
+  "selectorTargetingDesc": { "message": "Configure which CSS selectors the extension targets. Default is 'relative-time' for GitHub's standard relative time elements." },
+  "selectorListLabel": { "message": "Active selectors:" },
+  "selectorAddPlaceholder": { "message": "Add new selector (e.g., .js-relative-date)" },
+  "selectorAddButton": { "message": "Add Selector" },
+  "selectorRemoveAria": { "message": "Remove selector" },
+  "selectorListEmpty": { "message": "No selectors configured. Add at least one selector." },
+
+  "importExportTitle": { "message": "💾 Import/Export Settings" },
+  "importExportDesc": { "message": "Backup or share your settings as JSON." },
+  "exportButton": { "message": "Export Settings" },
+  "importButton": { "message": "Import Settings" },
+  "importPlaceholder": { "message": "Paste JSON settings here..." },
+  "importApplyButton": { "message": "Apply Imported Settings" },
+  "importSuccess": { "message": "Settings imported successfully!" },
+  "importError": { "message": "Failed to import settings. Please check the JSON format." },
+  "exportSuccess": { "message": "Settings copied to clipboard!" },
+
+  "helpTooltipEnable": { "message": "Toggle to enable or disable the extension globally" },
+  "helpTooltipDebug": { "message": "Shows detailed logs in the browser console for troubleshooting" },
+  "helpTooltipDateStyle": { "message": "Controls how verbose the date format is (Short: 12/15, Medium: Dec 15, Long: December 15)" },
+  "helpTooltipShowWeekday": { "message": "Add weekday prefix to dates (e.g., 'Mon, Dec 15')" },
+  "helpTooltipShowTime": { "message": "Controls when to show hours and minutes with dates" },
+  "helpTooltipIncludeSeconds": { "message": "Adds seconds to the time display (e.g., 3:45:30 PM)" }
 }

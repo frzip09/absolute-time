@@ -10,6 +10,8 @@
       showWeekday: 'olderYears', // never | olderYears | always
       showTime: 'actionsOnly', // never | actionsOnly | always
       includeSeconds: false,
+      // selector targeting
+      customSelectors: ['relative-time'], // default GitHub selector
     });
   }
 
@@ -29,6 +31,11 @@
     safe.includeSeconds = Boolean(safe.includeSeconds);
     safe.enabled = Boolean(safe.enabled);
     safe.debug = Boolean(safe.debug);
+
+    // Ensure customSelectors is an array
+    if (!Array.isArray(safe.customSelectors) || safe.customSelectors.length === 0) {
+      safe.customSelectors = defaults.customSelectors.slice();
+    }
 
     return Object.freeze(safe);
   }

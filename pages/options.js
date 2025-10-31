@@ -39,6 +39,30 @@ const createSelectors = () => Object.freeze({
   examplesTitle: 'examplesTitle',
   footerLine1: 'footerLine1',
   footerLine2: 'footerLine2',
+  // New selectors for preview, selectors, and import/export
+  livePreviewTitle: 'livePreviewTitle',
+  livePreviewDesc: 'livePreviewDesc',
+  previewRecentLabel: 'previewRecentLabel',
+  previewRecentValue: 'previewRecentValue',
+  previewThisWeekLabel: 'previewThisWeekLabel',
+  previewThisWeekValue: 'previewThisWeekValue',
+  previewOlderYearLabel: 'previewOlderYearLabel',
+  previewOlderYearValue: 'previewOlderYearValue',
+  previewActionLabel: 'previewActionLabel',
+  previewActionValue: 'previewActionValue',
+  selectorTargetingTitle: 'selectorTargetingTitle',
+  selectorTargetingDesc: 'selectorTargetingDesc',
+  selectorListLabel: 'selectorListLabel',
+  selectorList: 'selectorList',
+  selectorInput: 'selectorInput',
+  selectorAddButton: 'selectorAddButton',
+  importExportTitle: 'importExportTitle',
+  importExportDesc: 'importExportDesc',
+  exportButton: 'exportButton',
+  importButton: 'importButton',
+  importContainer: 'importContainer',
+  importTextarea: 'importTextarea',
+  importApplyButton: 'importApplyButton',
 });
 
 /**
@@ -229,7 +253,18 @@ const updateUiElements = (settings) => {
     includeSecondsTitle: document.getElementById('includeSecondsTitle'),
     includeSecondsDesc: document.getElementById('includeSecondsDesc'),
     dangerZoneTitle: document.getElementById('dangerZoneTitle'),
-    // import/export removed
+    // New elements
+    tooltipEnable: document.getElementById('tooltipEnable'),
+    tooltipDebug: document.getElementById('tooltipDebug'),
+    tooltipDateStyle: document.getElementById('tooltipDateStyle'),
+    tooltipShowWeekday: document.getElementById('tooltipShowWeekday'),
+    tooltipShowTime: document.getElementById('tooltipShowTime'),
+    tooltipIncludeSeconds: document.getElementById('tooltipIncludeSeconds'),
+    selectorInput: getElementById(selectors.selectorInput),
+    selectorAddButton: getElementById(selectors.selectorAddButton),
+    exportButton: getElementById(selectors.exportButton),
+    importButton: getElementById(selectors.importButton),
+    importApplyButton: getElementById(selectors.importApplyButton),
   };
 
   const updatedToggles = {
@@ -299,7 +334,85 @@ const updateUiElements = (settings) => {
     elements.resetDefaultsButton.textContent = chrome.i18n.getMessage('resetDefaults');
     elements.resetDefaultsButton.setAttribute('aria-label', chrome.i18n.getMessage('resetDefaults'));
   }
-  // import/export removed
+
+  // Localize tooltips
+  if (elements.tooltipEnable) {
+    elements.tooltipEnable.setAttribute('data-tooltip', chrome.i18n.getMessage('helpTooltipEnable'));
+  }
+  if (elements.tooltipDebug) {
+    elements.tooltipDebug.setAttribute('data-tooltip', chrome.i18n.getMessage('helpTooltipDebug'));
+  }
+  if (elements.tooltipDateStyle) {
+    elements.tooltipDateStyle.setAttribute('data-tooltip', chrome.i18n.getMessage('helpTooltipDateStyle'));
+  }
+  if (elements.tooltipShowWeekday) {
+    elements.tooltipShowWeekday.setAttribute('data-tooltip', chrome.i18n.getMessage('helpTooltipShowWeekday'));
+  }
+  if (elements.tooltipShowTime) {
+    elements.tooltipShowTime.setAttribute('data-tooltip', chrome.i18n.getMessage('helpTooltipShowTime'));
+  }
+  if (elements.tooltipIncludeSeconds) {
+    elements.tooltipIncludeSeconds.setAttribute('data-tooltip', chrome.i18n.getMessage('helpTooltipIncludeSeconds'));
+  }
+
+  // Localize new sections
+  const livePreviewTitle = getElementById(selectors.livePreviewTitle);
+  if (livePreviewTitle) livePreviewTitle.textContent = chrome.i18n.getMessage('livePreviewTitle');
+  
+  const livePreviewDesc = getElementById(selectors.livePreviewDesc);
+  if (livePreviewDesc) livePreviewDesc.textContent = chrome.i18n.getMessage('livePreviewDesc');
+  
+  const previewRecentLabel = getElementById(selectors.previewRecentLabel);
+  if (previewRecentLabel) previewRecentLabel.textContent = chrome.i18n.getMessage('previewRecent');
+  
+  const previewThisWeekLabel = getElementById(selectors.previewThisWeekLabel);
+  if (previewThisWeekLabel) previewThisWeekLabel.textContent = chrome.i18n.getMessage('previewThisWeek');
+  
+  const previewOlderYearLabel = getElementById(selectors.previewOlderYearLabel);
+  if (previewOlderYearLabel) previewOlderYearLabel.textContent = chrome.i18n.getMessage('previewOlderYear');
+  
+  const previewActionLabel = getElementById(selectors.previewActionLabel);
+  if (previewActionLabel) previewActionLabel.textContent = chrome.i18n.getMessage('previewAction');
+
+  const selectorTargetingTitle = getElementById(selectors.selectorTargetingTitle);
+  if (selectorTargetingTitle) selectorTargetingTitle.textContent = chrome.i18n.getMessage('selectorTargetingTitle');
+  
+  const selectorTargetingDesc = getElementById(selectors.selectorTargetingDesc);
+  if (selectorTargetingDesc) selectorTargetingDesc.textContent = chrome.i18n.getMessage('selectorTargetingDesc');
+  
+  const selectorListLabel = getElementById(selectors.selectorListLabel);
+  if (selectorListLabel) selectorListLabel.textContent = chrome.i18n.getMessage('selectorListLabel');
+  
+  if (elements.selectorInput) {
+    elements.selectorInput.placeholder = chrome.i18n.getMessage('selectorAddPlaceholder');
+  }
+  
+  if (elements.selectorAddButton) {
+    elements.selectorAddButton.textContent = chrome.i18n.getMessage('selectorAddButton');
+  }
+
+  const importExportTitle = getElementById(selectors.importExportTitle);
+  if (importExportTitle) importExportTitle.textContent = chrome.i18n.getMessage('importExportTitle');
+  
+  const importExportDesc = getElementById(selectors.importExportDesc);
+  if (importExportDesc) importExportDesc.textContent = chrome.i18n.getMessage('importExportDesc');
+  
+  if (elements.exportButton) {
+    elements.exportButton.textContent = chrome.i18n.getMessage('exportButton');
+  }
+  
+  if (elements.importButton) {
+    elements.importButton.textContent = chrome.i18n.getMessage('importButton');
+  }
+  
+  if (elements.importApplyButton) {
+    elements.importApplyButton.textContent = chrome.i18n.getMessage('importApplyButton');
+  }
+
+  const importTextarea = getElementById(selectors.importTextarea);
+  if (importTextarea) {
+    importTextarea.placeholder = chrome.i18n.getMessage('importPlaceholder');
+  }
 
   // Sync new control values
   if (elements.dateStyleSelect) elements.dateStyleSelect.value = settings.dateStyle || 'short';
@@ -380,6 +493,7 @@ const createToggleHandler = (settingKey) => async () => {
     const newSettings = toggleSetting(currentSettings, settingKey);
     await saveSettings(newSettings);
     updateUiElements(newSettings);
+    updateLivePreview(newSettings);
     await showSaveNotification();
   } catch (error) {
     console.error('Failed to toggle setting:', error);
@@ -448,6 +562,7 @@ const setupEventListeners = () => {
       const next = updateSettings(current, { dateStyle: e.target.value });
       await saveSettings(next);
       updateUiElements(next);
+      updateLivePreview(next);
       await showSaveNotification();
     });
   }
@@ -458,6 +573,7 @@ const setupEventListeners = () => {
       const next = updateSettings(current, { showWeekday: e.target.value });
       await saveSettings(next);
       updateUiElements(next);
+      updateLivePreview(next);
       await showSaveNotification();
     });
   }
@@ -468,6 +584,7 @@ const setupEventListeners = () => {
       const next = updateSettings(current, { showTime: e.target.value });
       await saveSettings(next);
       updateUiElements(next);
+      updateLivePreview(next);
       await showSaveNotification();
     });
   }
@@ -477,13 +594,271 @@ const setupEventListeners = () => {
       const defaults = createDefaultSettings();
       await saveSettings(defaults);
       updateUiElements(defaults);
+      updateLivePreview(defaults);
+      renderSelectorList(defaults.customSelectors);
       await showSaveNotification();
     });
   }
 
-  // import/export removed
+  // Selector management event listeners
+  const selectorAddButton = getElementById(selectors.selectorAddButton);
+  const selectorInput = getElementById(selectors.selectorInput);
+  
+  if (selectorAddButton) {
+    selectorAddButton.addEventListener('click', async () => {
+      const input = getElementById(selectors.selectorInput);
+      if (input && input.value) {
+        await addSelector(input.value);
+      }
+    });
+  }
+
+  if (selectorInput) {
+    selectorInput.addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (e.target.value) {
+          await addSelector(e.target.value);
+        }
+      }
+    });
+  }
+
+  // Import/Export event listeners
+  const exportButton = getElementById(selectors.exportButton);
+  if (exportButton) {
+    exportButton.addEventListener('click', exportSettings);
+  }
+
+  const importButton = getElementById(selectors.importButton);
+  const importContainer = getElementById(selectors.importContainer);
+  if (importButton && importContainer) {
+    importButton.addEventListener('click', () => {
+      const isVisible = importContainer.style.display !== 'none';
+      importContainer.style.display = isVisible ? 'none' : 'block';
+    });
+  }
+
+  const importApplyButton = getElementById(selectors.importApplyButton);
+  if (importApplyButton) {
+    importApplyButton.addEventListener('click', async () => {
+      const textarea = getElementById(selectors.importTextarea);
+      if (textarea && textarea.value) {
+        await importSettings(textarea.value);
+      }
+    });
+  }
 
   return { elements, handlers };
+};
+//#endregion
+
+//#region Live Preview Functions
+/**
+ * Formats a date according to current settings
+ * @param {Date} date - Date to format
+ * @param {Object} settings - Current settings
+ * @param {boolean} isActionPage - Whether to simulate action page
+ * @returns {string} Formatted date string
+ */
+const formatDateWithSettings = (date, settings, isActionPage = false) => {
+  const currentYear = new Date().getFullYear();
+  const dateYear = date.getFullYear();
+  
+  const options = {
+    year: 'numeric',
+    month: settings.dateStyle === 'long' ? 'long' : (settings.dateStyle === 'medium' ? 'short' : 'numeric'),
+    day: 'numeric',
+  };
+
+  // Add weekday based on policy
+  const shouldShowWeekday = 
+    settings.showWeekday === 'always' || 
+    (settings.showWeekday === 'olderYears' && dateYear < currentYear);
+  
+  if (shouldShowWeekday) {
+    options.weekday = 'short';
+  }
+
+  // Add time based on policy
+  const shouldShowTime = 
+    settings.showTime === 'always' || 
+    (settings.showTime === 'actionsOnly' && isActionPage);
+  
+  if (shouldShowTime) {
+    options.hour = '2-digit';
+    options.minute = '2-digit';
+    if (settings.includeSeconds) {
+      options.second = '2-digit';
+    }
+  }
+
+  return date.toLocaleString('en-US', options);
+};
+
+/**
+ * Updates the live preview with current settings
+ * @param {Object} settings - Current settings
+ */
+const updateLivePreview = (settings) => {
+  const now = new Date();
+  
+  // Recent: 2 hours ago
+  const recentDate = new Date(now - 2 * 60 * 60 * 1000);
+  const previewRecentValue = getElementById(selectors.previewRecentValue);
+  if (previewRecentValue) {
+    previewRecentValue.textContent = formatDateWithSettings(recentDate, settings, false);
+  }
+
+  // This week: 3 days ago
+  const thisWeekDate = new Date(now - 3 * 24 * 60 * 60 * 1000);
+  const previewThisWeekValue = getElementById(selectors.previewThisWeekValue);
+  if (previewThisWeekValue) {
+    previewThisWeekValue.textContent = formatDateWithSettings(thisWeekDate, settings, false);
+  }
+
+  // Older year: last year
+  const olderYearDate = new Date(now);
+  olderYearDate.setFullYear(now.getFullYear() - 1);
+  const previewOlderYearValue = getElementById(selectors.previewOlderYearValue);
+  if (previewOlderYearValue) {
+    previewOlderYearValue.textContent = formatDateWithSettings(olderYearDate, settings, false);
+  }
+
+  // Action page: simulate action page timestamp
+  const actionDate = new Date(now - 6 * 60 * 60 * 1000);
+  const previewActionValue = getElementById(selectors.previewActionValue);
+  if (previewActionValue) {
+    previewActionValue.textContent = formatDateWithSettings(actionDate, settings, true);
+  }
+};
+//#endregion
+
+//#region Selector Management Functions
+/**
+ * Renders the selector list
+ * @param {Array<string>} selectors - Array of selector strings
+ */
+const renderSelectorList = (selectors) => {
+  const listElement = getElementById(selectors.selectorList);
+  if (!listElement) return;
+
+  if (!selectors || selectors.length === 0) {
+    listElement.innerHTML = `<div style="color: #6b7280; font-size: 14px; padding: 12px;">${chrome.i18n.getMessage('selectorListEmpty')}</div>`;
+    return;
+  }
+
+  listElement.innerHTML = selectors.map(selector => `
+    <div class="selector-tag" role="listitem">
+      <span>${selector}</span>
+      <button 
+        class="selector-tag-remove" 
+        data-selector="${selector}"
+        aria-label="${chrome.i18n.getMessage('selectorRemoveAria')}: ${selector}"
+        type="button"
+      >×</button>
+    </div>
+  `).join('');
+
+  // Add event listeners to remove buttons
+  listElement.querySelectorAll('.selector-tag-remove').forEach(button => {
+    button.addEventListener('click', async (e) => {
+      const selectorToRemove = e.target.getAttribute('data-selector');
+      const currentSettings = await loadSettings();
+      const newSelectors = currentSettings.customSelectors.filter(s => s !== selectorToRemove);
+      
+      if (newSelectors.length === 0) {
+        await showErrorNotification(chrome.i18n.getMessage('selectorListEmpty'));
+        return;
+      }
+
+      const newSettings = updateSettings(currentSettings, { customSelectors: newSelectors });
+      await saveSettings(newSettings);
+      renderSelectorList(newSettings.customSelectors);
+      await showSaveNotification();
+    });
+  });
+};
+
+/**
+ * Adds a new selector
+ * @param {string} selector - Selector to add
+ */
+const addSelector = async (selector) => {
+  const trimmed = selector.trim();
+  if (!trimmed) return;
+
+  const currentSettings = await loadSettings();
+  
+  if (currentSettings.customSelectors.includes(trimmed)) {
+    await showErrorNotification('Selector already exists');
+    return;
+  }
+
+  const newSelectors = [...currentSettings.customSelectors, trimmed];
+  const newSettings = updateSettings(currentSettings, { customSelectors: newSelectors });
+  await saveSettings(newSettings);
+  renderSelectorList(newSettings.customSelectors);
+  
+  const input = getElementById(selectors.selectorInput);
+  if (input) input.value = '';
+  
+  await showSaveNotification();
+};
+//#endregion
+
+//#region Import/Export Functions
+/**
+ * Exports settings to JSON and copies to clipboard
+ */
+const exportSettings = async () => {
+  try {
+    const settings = await loadSettings();
+    const json = JSON.stringify(settings, null, 2);
+    
+    await navigator.clipboard.writeText(json);
+    await showSaveNotification();
+    
+    const notification = getElementById(selectors.saveNotification);
+    if (notification) {
+      notification.textContent = chrome.i18n.getMessage('exportSuccess');
+    }
+  } catch (error) {
+    console.error('Export failed:', error);
+    await showErrorNotification('Failed to export settings');
+  }
+};
+
+/**
+ * Imports settings from JSON
+ * @param {string} jsonString - JSON string to import
+ */
+const importSettings = async (jsonString) => {
+  try {
+    const parsed = JSON.parse(jsonString);
+    const coerced = window.absoluteTimeShared.coerceSettings(parsed);
+    
+    await saveSettings(coerced);
+    updateUiElements(coerced);
+    updateLivePreview(coerced);
+    renderSelectorList(coerced.customSelectors);
+    
+    const textarea = getElementById(selectors.importTextarea);
+    if (textarea) textarea.value = '';
+    
+    const container = getElementById(selectors.importContainer);
+    if (container) container.style.display = 'none';
+    
+    await showSaveNotification();
+    
+    const notification = getElementById(selectors.saveNotification);
+    if (notification) {
+      notification.textContent = chrome.i18n.getMessage('importSuccess');
+    }
+  } catch (error) {
+    console.error('Import failed:', error);
+    await showErrorNotification(chrome.i18n.getMessage('importError'));
+  }
 };
 //#endregion
 
@@ -498,6 +873,8 @@ const handleStorageChanges = async (changes, namespace) => {
   if (namespace === 'sync') {
     const settings = await loadSettings();
     updateUiElements(settings);
+    updateLivePreview(settings);
+    renderSelectorList(settings.customSelectors);
   }
 };
 //#endregion
@@ -511,6 +888,8 @@ const initializeOptions = async () => {
   try {
     const settings = await loadSettings();
     updateUiElements(settings);
+    updateLivePreview(settings);
+    renderSelectorList(settings.customSelectors);
     setupEventListeners();
     chrome.storage.onChanged.addListener(handleStorageChanges);
     return { success: true, settings };

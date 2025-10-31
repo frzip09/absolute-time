@@ -65,7 +65,7 @@
       chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace !== "sync") return;
         const updated = {};
-        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds"].forEach((key) => {
+        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds","customSelectors"].forEach((key) => {
           if (Object.prototype.hasOwnProperty.call(changes, key)) {
             updated[key] = changes[key].newValue;
           }
@@ -242,8 +242,12 @@
       return 0;
     }
 
-    const timeElements = document.querySelectorAll("relative-time");
-    logger(`Found ${timeElements.length} relative-time elements`);
+    // Use custom selectors from settings
+    const selectors = settings.customSelectors || ['relative-time'];
+    const selectorString = selectors.join(', ');
+    
+    const timeElements = document.querySelectorAll(selectorString);
+    logger(`Found ${timeElements.length} elements matching selectors: ${selectorString}`);
 
     const currentYear = getCurrentYear();
     
@@ -253,7 +257,7 @@
     const updatedCount = updatedElements.length;
     
     if (updatedCount > 0) {
-      logger(`Updated ${updatedCount} relative-time elements`);
+      logger(`Updated ${updatedCount} elements`);
     }
 
     return updatedCount;
@@ -262,15 +266,17 @@
 
   //#region DOM Utilities
   /**
-   * Checks if an element contains relative-time elements
+   * Checks if an element contains elements matching custom selectors
    * @param {HTMLElement} element - Element to check
-   * @returns {boolean} Whether element contains relative-time elements
+   * @returns {boolean} Whether element contains matching elements
    */
   const hasRelativeTimeElements = (element) => {
     if (!element || !element.querySelectorAll) {
       return false;
     }
-    return element.querySelectorAll("relative-time").length > 0;
+    const selectors = settings.customSelectors || ['relative-time'];
+    const selectorString = selectors.join(', ');
+    return element.querySelectorAll(selectorString).length > 0;
   };
 
   /**
@@ -279,17 +285,20 @@
    * @returns {boolean} Whether formatting should be triggered
    */
   const shouldTriggerFormatting = (mutation) => {
+    const selectors = settings.customSelectors || ['relative-time'];
+    const upperCaseSelectors = selectors.map(s => s.toUpperCase());
+    
     if (mutation.addedNodes.length > 0) {
       return Array.from(mutation.addedNodes).some(node => {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          return node.tagName === "RELATIVE-TIME" || hasRelativeTimeElements(node);
+          return upperCaseSelectors.includes(node.tagName) || hasRelativeTimeElements(node);
         }
         return false;
       });
     }
     
     return mutation.type === "attributes" &&
-           mutation.target.tagName === "RELATIVE-TIME" &&
+           upperCaseSelectors.includes(mutation.target.tagName) &&
            mutation.attributeName === "datetime";
   };
 
