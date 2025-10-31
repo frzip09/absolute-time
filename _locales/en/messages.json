@@ -93,6 +93,8 @@
   "importSuccess": { "message": "Settings imported successfully!" },
   "importError": { "message": "Failed to import settings. Please check the JSON format." },
   "exportSuccess": { "message": "Settings copied to clipboard!" },
+  "exportError": { "message": "Failed to export settings" },
+  "selectorExists": { "message": "Selector already exists" },
 
   "helpTooltipEnable": { "message": "Toggle to enable or disable the extension globally" },
   "helpTooltipDebug": { "message": "Shows detailed logs in the browser console for troubleshooting" },

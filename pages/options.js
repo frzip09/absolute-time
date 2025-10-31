@@ -744,25 +744,37 @@ const renderSelectorList = (selectors) => {
   if (!listElement) return;
 
   if (!selectors || selectors.length === 0) {
-    listElement.innerHTML = `<div style="color: #6b7280; font-size: 14px; padding: 12px;">${chrome.i18n.getMessage('selectorListEmpty')}</div>`;
+    const emptyDiv = document.createElement('div');
+    emptyDiv.style.cssText = 'color: #6b7280; font-size: 14px; padding: 12px;';
+    emptyDiv.textContent = chrome.i18n.getMessage('selectorListEmpty');
+    listElement.innerHTML = '';
+    listElement.appendChild(emptyDiv);
     return;
   }
 
-  listElement.innerHTML = selectors.map(selector => `
-    <div class="selector-tag" role="listitem">
-      <span>${selector}</span>
-      <button 
-        class="selector-tag-remove" 
-        data-selector="${selector}"
-        aria-label="${chrome.i18n.getMessage('selectorRemoveAria')}: ${selector}"
-        type="button"
-      >×</button>
-    </div>
-  `).join('');
-
-  // Add event listeners to remove buttons
-  listElement.querySelectorAll('.selector-tag-remove').forEach(button => {
-    button.addEventListener('click', async (e) => {
+  listElement.innerHTML = '';
+  
+  selectors.forEach(selector => {
+    const tagDiv = document.createElement('div');
+    tagDiv.className = 'selector-tag';
+    tagDiv.setAttribute('role', 'listitem');
+    
+    const selectorSpan = document.createElement('span');
+    selectorSpan.textContent = selector; // Use textContent to prevent XSS
+    
+    const removeButton = document.createElement('button');
+    removeButton.className = 'selector-tag-remove';
+    removeButton.setAttribute('data-selector', selector);
+    removeButton.setAttribute('aria-label', `${chrome.i18n.getMessage('selectorRemoveAria')}: ${selector}`);
+    removeButton.setAttribute('type', 'button');
+    removeButton.textContent = '×';
+    
+    tagDiv.appendChild(selectorSpan);
+    tagDiv.appendChild(removeButton);
+    listElement.appendChild(tagDiv);
+    
+    // Add event listener to remove button
+    removeButton.addEventListener('click', async (e) => {
       const selectorToRemove = e.target.getAttribute('data-selector');
       const currentSettings = await loadSettings();
       const newSelectors = currentSettings.customSelectors.filter(s => s !== selectorToRemove);
@@ -791,7 +803,7 @@ const addSelector = async (selector) => {
   const currentSettings = await loadSettings();
   
   if (currentSettings.customSelectors.includes(trimmed)) {
-    await showErrorNotification('Selector already exists');
+    await showErrorNotification(chrome.i18n.getMessage('selectorExists') || 'Selector already exists');
     return;
   }
 
@@ -825,7 +837,7 @@ const exportSettings = async () => {
     }
   } catch (error) {
     console.error('Export failed:', error);
-    await showErrorNotification('Failed to export settings');
+    await showErrorNotification(chrome.i18n.getMessage('exportError') || 'Failed to export settings');
   }
 };
 
