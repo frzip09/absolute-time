@@ -67,5 +67,26 @@
 
   "dangerZoneTitle": { "message": "Danger zone" },
   "resetDefaults": { "message": "Reset to defaults" },
-  "repoLinkLabel": { "message": "View repository" }
+  "repoLinkLabel": { "message": "View repository" },
+
+  "exclusionPatternsTitle": { "message": "🚫 Page Exclusions" },
+  "exclusionPatternsDesc": { "message": "Exclude specific pages, repos, or paths from formatting. Supports wildcards (*)." },
+  "exclusionPatternsEmpty": { "message": "No exclusion patterns defined. Add patterns to exclude specific pages." },
+  "addPatternButton": { "message": "Add Pattern" },
+  "patternPlaceholder": { "message": "e.g., github.com/:owner/:repo/issues/*" },
+  "testPatternButton": { "message": "Test Pattern" },
+  "removePatternButton": { "message": "Remove" },
+  "patternMatchesPage": { "message": "✓ Matches current page" },
+  "patternDoesNotMatch": { "message": "✗ Does not match current page" },
+  "invalidPattern": { "message": "Invalid pattern" },
+  "quickExcludeButton": { "message": "Quick Exclude This Page" },
+  "currentPageExcluded": { "message": "This page is excluded by pattern:" },
+  "manageExclusions": { "message": "Manage exclusions in settings" },
+  "patternExamples": { "message": "Pattern examples:" },
+  "patternExample1": { "message": "github.com/:owner/:repo/issues/*" },
+  "patternExample2": { "message": "github.com/microsoft/*" },
+  "patternExample3": { "message": "github.com/*/discussions/*" },
+  "popupQuickExcludeButton": { "message": "Quick Exclude This Page" },
+  "popupExclusionWarningTitle": { "message": "This page is excluded by pattern:" },
+  "popupManageExclusions": { "message": "Manage exclusions in settings" }
 }

@@ -284,6 +284,84 @@
         .example-arrow {
             color: #6b7280;
         }
+
+        .pattern-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            gap: 12px;
+        }
+
+        .pattern-text {
+            flex: 1;
+            font-family: monospace;
+            font-size: 13px;
+            color: #374151;
+            word-break: break-all;
+        }
+
+        .pattern-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .test-pattern-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .test-pattern-btn:hover {
+            background: #059669;
+        }
+
+        .remove-pattern-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .remove-pattern-btn:hover {
+            background: #dc2626;
+        }
+
+        .pattern-match-result {
+            font-size: 11px;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        .pattern-match-result.matches {
+            color: #059669;
+        }
+
+        .pattern-match-result.no-match {
+            color: #ef4444;
+        }
+
+        .empty-patterns {
+            text-align: center;
+            padding: 24px;
+            color: #9ca3af;
+            font-size: 14px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -382,6 +460,29 @@
             <h2 class="card-title" id="dangerZoneTitle"></h2>
             <div class="setting-item" style="justify-content: flex-end">
                 <button id="resetDefaultsButton" aria-label="" style="background:#ef4444;color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer"></button>
+            </div>
+            </div>
+
+            <div class="settings-card">
+            <h2 class="card-title" id="exclusionPatternsTitle"></h2>
+            <p style="margin-bottom: 16px; color: #6b7280; font-size: 14px;" id="exclusionPatternsDesc"></p>
+            
+            <div id="patternsList" style="margin-bottom: 16px;">
+                <!-- Patterns will be dynamically added here -->
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <input type="text" id="newPatternInput" placeholder="" style="flex: 1; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+                <button id="addPatternButton" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 500; white-space: nowrap;"></button>
+            </div>
+
+            <div class="example-section">
+                <div class="example-title" id="patternExamplesTitle"></div>
+                <div style="font-size: 12px; color: #6b7280; font-family: monospace;">
+                    <div id="patternExample1" style="margin-bottom: 4px;"></div>
+                    <div id="patternExample2" style="margin-bottom: 4px;"></div>
+                    <div id="patternExample3"></div>
+                </div>
             </div>
             </div>
 
