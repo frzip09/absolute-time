@@ -1,6 +1,6 @@
 (() => {
-  "use strict";
-  
+  'use strict';
+
   //#region State Management
   /**
    * Creates default settings configuration
@@ -14,7 +14,7 @@
    * @param {Object} updates - Settings updates to apply
    * @returns {Object} Updated settings object
    */
-  const updateSettings = (currentSettings, updates) => 
+  const updateSettings = (currentSettings, updates) =>
     Object.freeze({ ...currentSettings, ...updates });
 
   let settings = createDefaultSettings();
@@ -26,11 +26,13 @@
    * @param {boolean} debugEnabled - Whether debug logging is enabled
    * @returns {Function} Logging function
    */
-  const createLogger = (debugEnabled) => (...args) => {
-    if (debugEnabled) {
-      console.log("[absolute-time]", ...args);
-    }
-  };
+  const createLogger =
+    (debugEnabled) =>
+    (...args) => {
+      if (debugEnabled) {
+        console.log('[absolute-time]', ...args);
+      }
+    };
 
   //#endregion
 
@@ -40,12 +42,13 @@
    * @returns {Promise<Object>} Promise resolving to settings object
    */
   const loadSettings = () => {
-    if (typeof chrome !== "undefined" && chrome.storage) {
+    if (typeof chrome !== 'undefined' && chrome.storage) {
       return new Promise((resolve) => {
         chrome.storage.sync.get(createDefaultSettings(), (loadedSettings) => {
-          const normalized = (typeof window !== 'undefined' && window.absoluteTimeShared)
-            ? window.absoluteTimeShared.coerceSettings(loadedSettings)
-            : Object.freeze({ ...createDefaultSettings(), ...loadedSettings });
+          const normalized =
+            typeof window !== 'undefined' && window.absoluteTimeShared
+              ? window.absoluteTimeShared.coerceSettings(loadedSettings)
+              : Object.freeze({ ...createDefaultSettings(), ...loadedSettings });
           resolve(normalized);
         });
       });
@@ -61,15 +64,17 @@
    * @param {Function} onSettingsChange - Callback for settings changes
    */
   const setupStorageChangeListener = (onSettingsChange) => {
-    if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener((changes, namespace) => {
-        if (namespace !== "sync") return;
+        if (namespace !== 'sync') return;
         const updated = {};
-        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds"].forEach((key) => {
-          if (Object.prototype.hasOwnProperty.call(changes, key)) {
-            updated[key] = changes[key].newValue;
+        ['enabled', 'debug', 'dateStyle', 'showWeekday', 'showTime', 'includeSeconds'].forEach(
+          (key) => {
+            if (Object.prototype.hasOwnProperty.call(changes, key)) {
+              updated[key] = changes[key].newValue;
+            }
           }
-        });
+        );
         if (Object.keys(updated).length > 0) {
           onSettingsChange(updated);
         }
@@ -80,12 +85,57 @@
 
   //#region Time Formatting Logic
   /**
+   * Checks if an element should be skipped due to being in a sensitive context
+   * @param {HTMLElement} element - The relative-time element
+   * @returns {boolean} Whether the element should be skipped
+   */
+  const shouldSkipElement = (element) => {
+    // Skip if element is not visible (offsetParent is null for hidden elements)
+    // Note: offsetParent is null for elements with display:none or not attached to DOM
+    // Also null for position:fixed elements, but we still want to check those
+    if (element.offsetParent === null) {
+      // Double check with getComputedStyle only if offsetParent check suggests it's hidden
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden') {
+        return true;
+      }
+    }
+
+    // Traverse ancestors once to check for all conditions
+    let current = element;
+    while (current && current !== document.body) {
+      // Skip if element or any ancestor is contenteditable
+      if (current.isContentEditable) {
+        return true;
+      }
+
+      // Skip if element or any ancestor is aria-hidden
+      if (current.getAttribute('aria-hidden') === 'true') {
+        return true;
+      }
+
+      // Skip if element is within a template element
+      if (current.tagName === 'TEMPLATE') {
+        return true;
+      }
+
+      // Skip if element is within an input or textarea
+      if (current.tagName === 'INPUT' || current.tagName === 'TEXTAREA') {
+        return true;
+      }
+
+      current = current.parentElement;
+    }
+
+    return false;
+  };
+
+  /**
    * Checks if an element needs formatting
    * @param {HTMLElement} element - The relative-time element
    * @returns {boolean} Whether the element needs formatting
    */
-  const needsFormatting = (element) => 
-    element.getAttribute("data-formatted") !== "true";
+  const needsFormatting = (element) => element.getAttribute('data-formatted') !== 'true';
 
   /**
    * Gets the current year for date comparisons
@@ -98,17 +148,13 @@
    * @param {HTMLElement} element - The relative-time element
    * @returns {number} Year from the element's datetime attribute
    */
-  const getElementYear = (element) => 
-    new Date(element.getAttribute("datetime")).getFullYear();
+  const getElementYear = (element) => new Date(element.getAttribute('datetime')).getFullYear();
 
   /**
    * List of GitHub route patterns to ignore
    * @constant {string[]}
    */
-  const ignoredRoutes = Object.freeze([
-    "/issues",
-    "/discussions"
-  ]);
+  const ignoredRoutes = Object.freeze(['/issues', '/discussions']);
 
   /**
    * Checks if current page should be ignored based on route patterns
@@ -116,14 +162,14 @@
    */
   const isIgnoredRoute = () => {
     const pathname = window.location.pathname;
-    return ignoredRoutes.some(route => pathname.includes(route));
+    return ignoredRoutes.some((route) => pathname.includes(route));
   };
 
   /**
    * Checks if current page is an action page
    * @returns {boolean} Whether current page includes "/action"
    */
-  const isActionPage = () => window.location.pathname.includes("/actions");
+  const isActionPage = () => window.location.pathname.includes('/actions');
 
   /**
    * Applies base formatting attributes to an element
@@ -131,10 +177,10 @@
    * @returns {HTMLElement} The formatted element
    */
   const applyBaseFormatting = (element, currentSettings) => {
-    element.setAttribute("format", "datetime");
-    const style = currentSettings?.dateStyle || "short";
-    element.setAttribute("format-style", style);
-    element.setAttribute("data-formatted", "true");
+    element.setAttribute('format', 'datetime');
+    const style = currentSettings?.dateStyle || 'short';
+    element.setAttribute('format-style', style);
+    element.setAttribute('data-formatted', 'true');
     return element;
   };
 
@@ -145,14 +191,14 @@
    * @returns {HTMLElement} The formatted element
    */
   const applyYearFormatting = (element, currentYear, currentSettings) => {
-    const policy = currentSettings?.showWeekday || "olderYears";
+    const policy = currentSettings?.showWeekday || 'olderYears';
     const elementYear = getElementYear(element);
     const shouldShowWeekday =
-      policy === "always" || (policy === "olderYears" && elementYear < currentYear);
+      policy === 'always' || (policy === 'olderYears' && elementYear < currentYear);
     if (shouldShowWeekday) {
-      element.setAttribute("weekday", "narrow");
+      element.setAttribute('weekday', 'narrow');
     } else {
-      element.removeAttribute("weekday");
+      element.removeAttribute('weekday');
     }
     return element;
   };
@@ -163,22 +209,21 @@
    * @returns {HTMLElement} The formatted element
    */
   const applyTimeFormatting = (element, currentSettings) => {
-    const policy = currentSettings?.showTime || "actionsOnly";
-    const shouldShowTime =
-      policy === "always" || (policy === "actionsOnly" && isActionPage());
+    const policy = currentSettings?.showTime || 'actionsOnly';
+    const shouldShowTime = policy === 'always' || (policy === 'actionsOnly' && isActionPage());
 
     if (shouldShowTime) {
-      element.setAttribute("hour", "2-digit");
-      element.setAttribute("minute", "2-digit");
+      element.setAttribute('hour', '2-digit');
+      element.setAttribute('minute', '2-digit');
       if (currentSettings?.includeSeconds) {
-        element.setAttribute("second", "2-digit");
+        element.setAttribute('second', '2-digit');
       } else {
-        element.removeAttribute("second");
+        element.removeAttribute('second');
       }
     } else {
-      element.removeAttribute("hour");
-      element.removeAttribute("minute");
-      element.removeAttribute("second");
+      element.removeAttribute('hour');
+      element.removeAttribute('minute');
+      element.removeAttribute('second');
     }
     return element;
   };
@@ -193,7 +238,7 @@
     return [
       (el) => applyBaseFormatting(el, currentSettings),
       (el) => applyYearFormatting(el, currentYear, currentSettings),
-      (el) => applyTimeFormatting(el, currentSettings)
+      (el) => applyTimeFormatting(el, currentSettings),
     ].reduce((el, formatFn) => formatFn(el), element);
   };
 
@@ -211,7 +256,7 @@
       'hour',
       'minute',
       'second',
-      'data-formatted'
+      'data-formatted',
     ];
 
     formatted.forEach((el) => {
@@ -233,7 +278,7 @@
   const formatRelativeTimes = (enabled, logger) => {
     if (!enabled) {
       // When disabled, revert any previously formatted elements
-      logger("Relative time formatting is disabled");
+      logger('Relative time formatting is disabled');
       return unformatRelativeTimes(logger);
     }
 
@@ -242,16 +287,27 @@
       return 0;
     }
 
-    const timeElements = document.querySelectorAll("relative-time");
+    const timeElements = document.querySelectorAll('relative-time');
     logger(`Found ${timeElements.length} relative-time elements`);
 
     const currentYear = getCurrentYear();
-    
-    const updatedElements = Array.from(timeElements)
-      .map(element => formatSingleElement(element, currentYear, settings));
+
+    // Filter out elements that should be skipped due to sensitive context
+    const elementsToFormat = Array.from(timeElements).filter(
+      (element) => !shouldSkipElement(element)
+    );
+
+    if (timeElements.length > elementsToFormat.length) {
+      const skippedCount = timeElements.length - elementsToFormat.length;
+      logger(`Skipped ${skippedCount} relative-time elements in sensitive/irrelevant contexts`);
+    }
+
+    const updatedElements = elementsToFormat.map((element) =>
+      formatSingleElement(element, currentYear, settings)
+    );
 
     const updatedCount = updatedElements.length;
-    
+
     if (updatedCount > 0) {
       logger(`Updated ${updatedCount} relative-time elements`);
     }
@@ -270,7 +326,7 @@
     if (!element || !element.querySelectorAll) {
       return false;
     }
-    return element.querySelectorAll("relative-time").length > 0;
+    return element.querySelectorAll('relative-time').length > 0;
   };
 
   /**
@@ -280,17 +336,19 @@
    */
   const shouldTriggerFormatting = (mutation) => {
     if (mutation.addedNodes.length > 0) {
-      return Array.from(mutation.addedNodes).some(node => {
+      return Array.from(mutation.addedNodes).some((node) => {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          return node.tagName === "RELATIVE-TIME" || hasRelativeTimeElements(node);
+          return node.tagName === 'RELATIVE-TIME' || hasRelativeTimeElements(node);
         }
         return false;
       });
     }
-    
-    return mutation.type === "attributes" &&
-           mutation.target.tagName === "RELATIVE-TIME" &&
-           mutation.attributeName === "datetime";
+
+    return (
+      mutation.type === 'attributes' &&
+      mutation.target.tagName === 'RELATIVE-TIME' &&
+      mutation.attributeName === 'datetime'
+    );
   };
 
   /**
@@ -298,8 +356,7 @@
    * @param {MutationRecord[]} mutations - Array of mutation records
    * @returns {boolean} Whether any mutation requires formatting
    */
-  const processMutations = (mutations) => 
-    mutations.some(shouldTriggerFormatting);
+  const processMutations = (mutations) => mutations.some(shouldTriggerFormatting);
   //#endregion
 
   //#region Initialization and Event Handling
@@ -322,17 +379,17 @@
    */
   const initializeExtension = async () => {
     const logger = createLogger(settings.debug);
-    logger("Initializing absolute-time");
+    logger('Initializing absolute-time');
 
     try {
       const loadedSettings = await loadSettings();
       settings = updateSettings(settings, loadedSettings);
-      logger("Settings loaded", JSON.stringify(settings));
+      logger('Settings loaded', JSON.stringify(settings));
     } catch (error) {
-      logger("Failed to load settings, using defaults");
+      logger('Failed to load settings, using defaults');
     }
 
-    const formatWithCurrentSettings = () => 
+    const formatWithCurrentSettings = () =>
       formatRelativeTimes(settings.enabled, createLogger(settings.debug));
 
     const debouncedFormat = createDebouncedFormatter(formatWithCurrentSettings);
@@ -340,15 +397,15 @@
     const handleSettingsChange = (newSettings) => {
       settings = updateSettings(settings, newSettings);
       const updatedLogger = createLogger(settings.debug);
-      updatedLogger("Settings changed", JSON.stringify(settings));
+      updatedLogger('Settings changed', JSON.stringify(settings));
       // Apply formatting immediately after settings change
       formatWithCurrentSettings();
     };
 
     setupStorageChangeListener(handleSettingsChange);
 
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", formatWithCurrentSettings);
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', formatWithCurrentSettings);
     } else {
       formatWithCurrentSettings();
     }
@@ -356,7 +413,7 @@
     const observer = new MutationObserver((mutations) => {
       if (processMutations(mutations)) {
         const currentLogger = createLogger(settings.debug);
-        currentLogger("DOM changes detected, formatting relative times");
+        currentLogger('DOM changes detected, formatting relative times');
         debouncedFormat();
       }
     });
@@ -365,31 +422,31 @@
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ["datetime"],
+      attributeFilter: ['datetime'],
     };
 
     if (document.body) {
       observer.observe(document.body, observerConfig);
-      logger("DOM observer initialized");
+      logger('DOM observer initialized');
     } else {
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener('DOMContentLoaded', () => {
         observer.observe(document.body, observerConfig);
-        logger("DOM observer initialized after DOMContentLoaded");
+        logger('DOM observer initialized after DOMContentLoaded');
       });
     }
 
     const navHandler = () => {
       const navLogger = createLogger(settings.debug);
-      navLogger("GitHub navigation event detected, formatting relative times");
+      navLogger('GitHub navigation event detected, formatting relative times');
       setTimeout(formatWithCurrentSettings, 1000);
     };
 
-    document.addEventListener("turbo:load", navHandler);
-    document.addEventListener("turbo:render", navHandler);
-    document.addEventListener("turbo:frame-load", navHandler);
-    document.addEventListener("pjax:end", navHandler);
+    document.addEventListener('turbo:load', navHandler);
+    document.addEventListener('turbo:render', navHandler);
+    document.addEventListener('turbo:frame-load', navHandler);
+    document.addEventListener('pjax:end', navHandler);
 
-    logger("absolute-time initialized");
+    logger('absolute-time initialized');
   };
   //#endregion
 
