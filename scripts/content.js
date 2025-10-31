@@ -18,6 +18,20 @@
     Object.freeze({ ...currentSettings, ...updates });
 
   let settings = createDefaultSettings();
+  
+  // Cache for selector-related values to avoid repeated processing
+  let cachedSelectorString = 'relative-time';
+  let cachedUpperCaseSelectors = ['RELATIVE-TIME'];
+  
+  /**
+   * Updates cached selector values when settings change
+   * @param {Object} currentSettings - Current settings
+   */
+  const updateSelectorCache = (currentSettings) => {
+    const selectors = currentSettings.customSelectors || ['relative-time'];
+    cachedSelectorString = selectors.join(', ');
+    cachedUpperCaseSelectors = selectors.map(s => s.toUpperCase());
+  };
   //#endregion
 
   //#region Logging Utilities
@@ -65,7 +79,7 @@
       chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace !== "sync") return;
         const updated = {};
-        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds"].forEach((key) => {
+        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds","customSelectors"].forEach((key) => {
           if (Object.prototype.hasOwnProperty.call(changes, key)) {
             updated[key] = changes[key].newValue;
           }
@@ -242,8 +256,9 @@
       return 0;
     }
 
-    const timeElements = document.querySelectorAll("relative-time");
-    logger(`Found ${timeElements.length} relative-time elements`);
+    // Use cached selector string
+    const timeElements = document.querySelectorAll(cachedSelectorString);
+    logger(`Found ${timeElements.length} elements matching selectors: ${cachedSelectorString}`);
 
     const currentYear = getCurrentYear();
     
@@ -253,7 +268,7 @@
     const updatedCount = updatedElements.length;
     
     if (updatedCount > 0) {
-      logger(`Updated ${updatedCount} relative-time elements`);
+      logger(`Updated ${updatedCount} elements`);
     }
 
     return updatedCount;
@@ -262,15 +277,15 @@
 
   //#region DOM Utilities
   /**
-   * Checks if an element contains relative-time elements
+   * Checks if an element contains elements matching custom selectors
    * @param {HTMLElement} element - Element to check
-   * @returns {boolean} Whether element contains relative-time elements
+   * @returns {boolean} Whether element contains matching elements
    */
   const hasRelativeTimeElements = (element) => {
     if (!element || !element.querySelectorAll) {
       return false;
     }
-    return element.querySelectorAll("relative-time").length > 0;
+    return element.querySelectorAll(cachedSelectorString).length > 0;
   };
 
   /**
@@ -282,14 +297,14 @@
     if (mutation.addedNodes.length > 0) {
       return Array.from(mutation.addedNodes).some(node => {
         if (node.nodeType === Node.ELEMENT_NODE) {
-          return node.tagName === "RELATIVE-TIME" || hasRelativeTimeElements(node);
+          return cachedUpperCaseSelectors.includes(node.tagName) || hasRelativeTimeElements(node);
         }
         return false;
       });
     }
     
     return mutation.type === "attributes" &&
-           mutation.target.tagName === "RELATIVE-TIME" &&
+           cachedUpperCaseSelectors.includes(mutation.target.tagName) &&
            mutation.attributeName === "datetime";
   };
 
@@ -327,9 +342,11 @@
     try {
       const loadedSettings = await loadSettings();
       settings = updateSettings(settings, loadedSettings);
+      updateSelectorCache(settings); // Initialize cache
       logger("Settings loaded", JSON.stringify(settings));
     } catch (error) {
       logger("Failed to load settings, using defaults");
+      updateSelectorCache(settings); // Initialize cache with defaults
     }
 
     const formatWithCurrentSettings = () => 
@@ -339,6 +356,7 @@
 
     const handleSettingsChange = (newSettings) => {
       settings = updateSettings(settings, newSettings);
+      updateSelectorCache(settings); // Update cache when settings change
       const updatedLogger = createLogger(settings.debug);
       updatedLogger("Settings changed", JSON.stringify(settings));
       // Apply formatting immediately after settings change
