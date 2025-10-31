@@ -470,8 +470,14 @@
       settings = updateSettings(settings, newSettings);
       const updatedLogger = createLogger(settings.debug);
       updatedLogger('Settings changed', JSON.stringify(settings));
-      // When settings change, scan and observe all elements again
-      scanAndObserveElements(intersectionObserver, updatedLogger);
+
+      if (!settings.enabled) {
+        // When disabled, unformat all elements
+        unformatRelativeTimes(updatedLogger);
+      } else {
+        // When enabled, scan and observe all elements again
+        scanAndObserveElements(intersectionObserver, updatedLogger);
+      }
     };
 
     setupStorageChangeListener(handleSettingsChange);
