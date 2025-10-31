@@ -90,45 +90,39 @@
    * @returns {boolean} Whether the element should be skipped
    */
   const shouldSkipElement = (element) => {
-    // Skip if element or any ancestor is contenteditable
-    let current = element;
-    while (current && current !== document.body) {
-      if (current.isContentEditable || current.getAttribute('contenteditable') === 'true') {
+    // Skip if element is not visible (offsetParent is null for hidden elements)
+    // Note: offsetParent is null for elements with display:none or not attached to DOM
+    if (element.offsetParent === null && element !== document.body) {
+      // Double check with getComputedStyle only if offsetParent check suggests it's hidden
+      const style = window.getComputedStyle(element);
+      if (style.display === 'none' || style.visibility === 'hidden') {
         return true;
       }
-      current = current.parentElement;
     }
 
-    // Skip if element or any ancestor is aria-hidden
-    current = element;
+    // Traverse ancestors once to check for all conditions
+    let current = element;
     while (current && current !== document.body) {
+      // Skip if element or any ancestor is contenteditable
+      if (current.isContentEditable) {
+        return true;
+      }
+
+      // Skip if element or any ancestor is aria-hidden
       if (current.getAttribute('aria-hidden') === 'true') {
         return true;
       }
-      current = current.parentElement;
-    }
 
-    // Skip if element is not visible
-    const style = window.getComputedStyle(element);
-    if (style.display === 'none' || style.visibility === 'hidden') {
-      return true;
-    }
-
-    // Skip if element is within a template element
-    current = element;
-    while (current && current !== document.body) {
+      // Skip if element is within a template element
       if (current.tagName === 'TEMPLATE') {
         return true;
       }
-      current = current.parentElement;
-    }
 
-    // Skip if element is within an input or textarea
-    current = element;
-    while (current && current !== document.body) {
+      // Skip if element is within an input or textarea
       if (current.tagName === 'INPUT' || current.tagName === 'TEXTAREA') {
         return true;
       }
+
       current = current.parentElement;
     }
 
