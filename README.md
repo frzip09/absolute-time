@@ -57,6 +57,11 @@ The extension is **intentionally disabled** on certain GitHub pages where precis
 - Manifest V3, plain JavaScript
 - Handles SPA navigation and dynamic content injection
 - Minimal footprint, no trackers, no nonsense
+- **Performance optimized**: Uses IntersectionObserver to format only visible timestamps
+  - Reduces initial page load time on large GitHub pages (issues, PRs, commit lists)
+  - Formats timestamps as they enter the viewport (with 50px preemptive margin)
+  - Handles GitHub's relative time library mutations to maintain persistent formatting
+  - Cleans up state on navigation to prevent memory leaks
 
 ### 🔒 Permissions
 - storage

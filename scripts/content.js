@@ -30,6 +30,28 @@
    * @type {Set<HTMLElement>}
    */
   const visibleElementsQueue = new Set();
+
+  /**
+   * Performance constants
+   */
+  const VIEWPORT_MARGIN_PX = 50; // Preemptive formatting margin
+  const NAVIGATION_SCAN_DELAY_MS = 1000; // Delay before scanning after navigation
+  const DEBOUNCE_DELAY_MS = 250; // Debounce delay for format operations
+
+  /**
+   * Cached current year for performance
+   */
+  let cachedCurrentYear = new Date().getFullYear();
+
+  /**
+   * Updates cached year if needed
+   */
+  const updateCachedYear = () => {
+    const now = new Date().getFullYear();
+    if (now !== cachedCurrentYear) {
+      cachedCurrentYear = now;
+    }
+  };
   //#endregion
 
   //#region Logging Utilities
@@ -107,7 +129,10 @@
    * Gets the current year for date comparisons
    * @returns {number} Current year
    */
-  const getCurrentYear = () => new Date().getFullYear();
+  const getCurrentYear = () => {
+    updateCachedYear();
+    return cachedCurrentYear;
+  };
 
   /**
    * Extracts year from a relative-time element
@@ -350,7 +375,7 @@
    * @param {number} delay - Debounce delay in milliseconds
    * @returns {Function} Debounced function
    */
-  const createDebouncedFormatter = (formatFn, delay = 250) => {
+  const createDebouncedFormatter = (formatFn, delay = DEBOUNCE_DELAY_MS) => {
     let timeoutId;
     return () => {
       clearTimeout(timeoutId);
@@ -385,7 +410,7 @@
 
     // rootMargin provides preemptive formatting for elements about to enter viewport
     return new IntersectionObserver(handleIntersection, {
-      rootMargin: '50px 0px 50px 0px', // Format elements 50px before they become visible
+      rootMargin: `${VIEWPORT_MARGIN_PX}px 0px ${VIEWPORT_MARGIN_PX}px 0px`,
       threshold: 0,
     });
   };
@@ -553,7 +578,7 @@
       visibleElementsQueue.clear();
       setTimeout(() => {
         scanAndObserveElements(intersectionObserver, navLogger);
-      }, 1000);
+      }, NAVIGATION_SCAN_DELAY_MS);
     };
 
     document.addEventListener('turbo:load', navHandler);
