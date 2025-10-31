@@ -7,7 +7,21 @@
  * Creates default settings object
  * @returns {Object} Default settings
  */
-const createDefaultSettings = () => window.absoluteTimeShared.getDefaultSettings();
+const createDefaultSettings = () => {
+  if (window.absoluteTimeShared && typeof window.absoluteTimeShared.getDefaultSettings === 'function') {
+    return window.absoluteTimeShared.getDefaultSettings();
+  }
+  // Fallback if sharedSettings.js hasn't loaded yet
+  return {
+    enabled: true,
+    debug: false,
+    dateStyle: 'short',
+    showWeekday: 'olderYears',
+    showTime: 'actionsOnly',
+    includeSeconds: false,
+    exclusionPatterns: [],
+  };
+};
 
 /**
  * Creates UI element selectors object
@@ -290,10 +304,11 @@ const createQuickExcludeHandler = () => async () => {
     if (!tabs || !tabs[0] || !tabs[0].url) return;
     
     const currentUrl = tabs[0].url;
-    const urlObj = new URL(currentUrl);
     
-    // Create a pattern for the current page path
-    const pattern = urlObj.hostname + urlObj.pathname;
+    // Use shared utility to convert URL to pattern
+    const pattern = window.absoluteTimeShared && window.absoluteTimeShared.urlToPattern ?
+      window.absoluteTimeShared.urlToPattern(currentUrl) :
+      new URL(currentUrl).hostname + new URL(currentUrl).pathname;
     
     const currentSettings = await loadSettings();
     const newPatterns = [...(currentSettings.exclusionPatterns || []), pattern];

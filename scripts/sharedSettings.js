@@ -67,19 +67,22 @@
    * @returns {RegExp} Regular expression for matching
    */
   function patternToRegex(pattern) {
-    // First, replace :param and * placeholders with temporary markers
-    // to avoid them being escaped
+    // Use unique markers that are unlikely to appear in URLs
+    const PARAM_MARKER = '\u0001PARAM\u0001';
+    const WILDCARD_MARKER = '\u0002WILDCARD\u0002';
+    
+    // First, replace :param and * placeholders with unique markers
     let processed = pattern
-      .replace(/:[^/]+/g, '__PARAM__')
-      .replace(/\*/g, '__WILDCARD__');
+      .replace(/:[^/]+/g, PARAM_MARKER)
+      .replace(/\*/g, WILDCARD_MARKER);
     
     // Now escape special regex characters
     processed = processed.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
     
     // Finally, replace markers with actual regex patterns
     processed = processed
-      .replace(/__PARAM__/g, '[^/]+')
-      .replace(/__WILDCARD__/g, '.*');
+      .replace(new RegExp(PARAM_MARKER.replace(/\u0001/g, '\\u0001'), 'g'), '[^/]+')
+      .replace(new RegExp(WILDCARD_MARKER.replace(/\u0002/g, '\\u0002'), 'g'), '.*');
     
     return new RegExp('^' + processed + '$');
   }
@@ -120,10 +123,25 @@
     return patterns.some(pattern => matchesPattern(url, pattern));
   }
 
+  /**
+   * Converts a URL to an exclusion pattern
+   * @param {string} url - URL to convert
+   * @returns {string} Exclusion pattern
+   */
+  function urlToPattern(url) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname + urlObj.pathname;
+    } catch (e) {
+      return url;
+    }
+  }
+
   // Export utility functions
   if (typeof window !== 'undefined' && window.absoluteTimeShared) {
     window.absoluteTimeShared.patternToRegex = patternToRegex;
     window.absoluteTimeShared.matchesPattern = matchesPattern;
     window.absoluteTimeShared.isPageExcluded = isPageExcluded;
+    window.absoluteTimeShared.urlToPattern = urlToPattern;
   }
 })();
