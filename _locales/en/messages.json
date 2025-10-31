@@ -83,6 +83,7 @@
   "selectorAddButton": { "message": "Add Selector" },
   "selectorRemoveAria": { "message": "Remove selector" },
   "selectorListEmpty": { "message": "No selectors configured. Add at least one selector." },
+  "selectorCannotRemoveLast": { "message": "Cannot remove the last selector. At least one selector must remain." },
 
   "importExportTitle": { "message": "💾 Import/Export Settings" },
   "importExportDesc": { "message": "Backup or share your settings as JSON." },

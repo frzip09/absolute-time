@@ -780,7 +780,7 @@ const renderSelectorList = (selectors) => {
       const newSelectors = currentSettings.customSelectors.filter(s => s !== selectorToRemove);
       
       if (newSelectors.length === 0) {
-        await showErrorNotification(chrome.i18n.getMessage('selectorListEmpty'));
+        await showErrorNotification(chrome.i18n.getMessage('selectorCannotRemoveLast'));
         return;
       }
 
