@@ -92,7 +92,8 @@
   const shouldSkipElement = (element) => {
     // Skip if element is not visible (offsetParent is null for hidden elements)
     // Note: offsetParent is null for elements with display:none or not attached to DOM
-    if (element.offsetParent === null && element !== document.body) {
+    // Also null for position:fixed elements, but we still want to check those
+    if (element.offsetParent === null) {
       // Double check with getComputedStyle only if offsetParent check suggests it's hidden
       const style = window.getComputedStyle(element);
       if (style.display === 'none' || style.visibility === 'hidden') {
