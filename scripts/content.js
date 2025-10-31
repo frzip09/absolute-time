@@ -53,7 +53,6 @@
   /**
    * Adds visual debug indicator to an element
    * @param {HTMLElement} element - Element to mark
-   * @param {string} color - Color of the indicator
    */
   const addDebugIndicator = (element) => {
     if (!settings.debug) return;
@@ -239,17 +238,26 @@
   };
 
   /**
+   * Formatting pipeline for relative-time elements
+   * @constant {Function[]}
+   */
+  const formattingPipeline = [
+    (el, currentYear, currentSettings) => applyBaseFormatting(el, currentSettings),
+    (el, currentYear, currentSettings) => applyYearFormatting(el, currentYear, currentSettings),
+    (el, currentYear, currentSettings) => applyTimeFormatting(el, currentSettings),
+  ];
+
+  /**
    * Formats a single relative-time element
    * @param {HTMLElement} element - The relative-time element
    * @param {number} currentYear - Current year
    * @returns {HTMLElement} The formatted element
    */
   const formatSingleElement = (element, currentYear, currentSettings) => {
-    const formatted = [
-      (el) => applyBaseFormatting(el, currentSettings),
-      (el) => applyYearFormatting(el, currentYear, currentSettings),
-      (el) => applyTimeFormatting(el, currentSettings),
-    ].reduce((el, formatFn) => formatFn(el), element);
+    const formatted = formattingPipeline.reduce(
+      (el, formatFn) => formatFn(el, currentYear, currentSettings),
+      element
+    );
 
     // Add debug indicator after formatting
     addDebugIndicator(formatted);
@@ -503,7 +511,7 @@
     // Create debounced handler for batched formatting
     const debouncedBatchFormat = createDebouncedFormatter((elements) => {
       const currentLogger = createLogger(settings.debug);
-      if (elements && elements.length > 0) {
+      if (elements.length > 0) {
         scheduleFormatting(elements, currentLogger);
       }
     }, 250);
