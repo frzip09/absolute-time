@@ -531,11 +531,17 @@ const removePattern = async (index) => {
  * @returns {Promise<void>}
  */
 const addPattern = async (pattern) => {
-  if (!pattern || pattern.trim() === '') return;
+  const trimmed = pattern ? pattern.trim() : '';
+  
+  if (!trimmed) {
+    // Show error for empty pattern
+    await showErrorNotification(chrome.i18n.getMessage('invalidPattern'));
+    return;
+  }
 
   try {
     const currentSettings = await loadSettings();
-    const newPatterns = [...(currentSettings.exclusionPatterns || []), pattern.trim()];
+    const newPatterns = [...(currentSettings.exclusionPatterns || []), trimmed];
     const newSettings = updateSettings(currentSettings, { exclusionPatterns: newPatterns });
     await saveSettings(newSettings);
     renderPatternsList(newPatterns);

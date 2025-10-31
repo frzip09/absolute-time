@@ -71,6 +71,10 @@
     const PARAM_MARKER = '\u0001PARAM\u0001';
     const WILDCARD_MARKER = '\u0002WILDCARD\u0002';
     
+    // Pre-compiled regex for marker replacement (optimization)
+    const PARAM_REGEX = /\u0001PARAM\u0001/g;
+    const WILDCARD_REGEX = /\u0002WILDCARD\u0002/g;
+    
     // First, replace :param and * placeholders with unique markers
     let processed = pattern
       .replace(/:[^/]+/g, PARAM_MARKER)
@@ -81,8 +85,8 @@
     
     // Finally, replace markers with actual regex patterns
     processed = processed
-      .replace(new RegExp(PARAM_MARKER.replace(/\u0001/g, '\\u0001'), 'g'), '[^/]+')
-      .replace(new RegExp(WILDCARD_MARKER.replace(/\u0002/g, '\\u0002'), 'g'), '.*');
+      .replace(PARAM_REGEX, '[^/]+')
+      .replace(WILDCARD_REGEX, '.*');
     
     return new RegExp('^' + processed + '$');
   }
