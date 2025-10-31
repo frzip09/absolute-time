@@ -401,49 +401,63 @@ const renderPatternsList = (patterns) => {
   const patternsList = getElementById(selectors.patternsList);
   if (!patternsList) return;
 
+  // Clear existing content
+  patternsList.innerHTML = '';
+
   if (!patterns || patterns.length === 0) {
-    patternsList.innerHTML = `<div class="empty-patterns">${chrome.i18n.getMessage('exclusionPatternsEmpty')}</div>`;
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'empty-patterns';
+    emptyDiv.textContent = chrome.i18n.getMessage('exclusionPatternsEmpty');
+    patternsList.appendChild(emptyDiv);
     return;
   }
 
-  patternsList.innerHTML = patterns.map((pattern, index) => `
-    <div class="pattern-item" data-index="${index}">
-      <div style="flex: 1;">
-        <div class="pattern-text">${escapeHtml(pattern)}</div>
-        <div class="pattern-match-result" data-pattern-index="${index}" style="display: none;"></div>
-      </div>
-      <div class="pattern-actions">
-        <button class="test-pattern-btn" data-index="${index}">${chrome.i18n.getMessage('testPatternButton')}</button>
-        <button class="remove-pattern-btn" data-index="${index}">${chrome.i18n.getMessage('removePatternButton')}</button>
-      </div>
-    </div>
-  `).join('');
+  patterns.forEach((pattern, index) => {
+    const patternItem = document.createElement('div');
+    patternItem.className = 'pattern-item';
+    patternItem.dataset.index = index;
 
-  // Attach event listeners
-  patternsList.querySelectorAll('.test-pattern-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const index = parseInt(e.target.dataset.index);
-      await testPattern(patterns[index], index);
+    const contentDiv = document.createElement('div');
+    contentDiv.style.flex = '1';
+
+    const patternText = document.createElement('div');
+    patternText.className = 'pattern-text';
+    patternText.textContent = pattern; // Safe - uses textContent
+
+    const matchResult = document.createElement('div');
+    matchResult.className = 'pattern-match-result';
+    matchResult.dataset.patternIndex = index;
+    matchResult.style.display = 'none';
+
+    contentDiv.appendChild(patternText);
+    contentDiv.appendChild(matchResult);
+
+    const actionsDiv = document.createElement('div');
+    actionsDiv.className = 'pattern-actions';
+
+    const testBtn = document.createElement('button');
+    testBtn.className = 'test-pattern-btn';
+    testBtn.dataset.index = index;
+    testBtn.textContent = chrome.i18n.getMessage('testPatternButton');
+    testBtn.addEventListener('click', async () => {
+      await testPattern(pattern, index);
     });
-  });
 
-  patternsList.querySelectorAll('.remove-pattern-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const index = parseInt(e.target.dataset.index);
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-pattern-btn';
+    removeBtn.dataset.index = index;
+    removeBtn.textContent = chrome.i18n.getMessage('removePatternButton');
+    removeBtn.addEventListener('click', async () => {
       await removePattern(index);
     });
-  });
-};
 
-/**
- * Escapes HTML special characters
- * @param {string} text - Text to escape
- * @returns {string} Escaped text
- */
-const escapeHtml = (text) => {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+    actionsDiv.appendChild(testBtn);
+    actionsDiv.appendChild(removeBtn);
+
+    patternItem.appendChild(contentDiv);
+    patternItem.appendChild(actionsDiv);
+    patternsList.appendChild(patternItem);
+  });
 };
 
 /**

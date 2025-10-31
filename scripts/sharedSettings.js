@@ -40,10 +40,19 @@
     return Object.freeze(safe);
   }
 
+  /**
+   * Gets list of all setting keys that can be synced
+   * @returns {string[]} Array of setting keys
+   */
+  function getSettingKeys() {
+    return ['enabled', 'debug', 'dateStyle', 'showWeekday', 'showTime', 'includeSeconds', 'exclusionPatterns'];
+  }
+
   if (typeof window !== 'undefined') {
     window.absoluteTimeShared = {
       getDefaultSettings: getDefaultSettings,
       coerceSettings: coerceSettings,
+      getSettingKeys: getSettingKeys,
     };
   }
 
@@ -58,15 +67,21 @@
    * @returns {RegExp} Regular expression for matching
    */
   function patternToRegex(pattern) {
-    // Escape special regex characters except * and :
-    let escaped = pattern
-      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
-      // Replace :param with [^/]+ to match any segment
-      .replace(/:[^/]+/g, '[^/]+')
-      // Replace * with .* to match any sequence
-      .replace(/\*/g, '.*');
+    // First, replace :param and * placeholders with temporary markers
+    // to avoid them being escaped
+    let processed = pattern
+      .replace(/:[^/]+/g, '__PARAM__')
+      .replace(/\*/g, '__WILDCARD__');
     
-    return new RegExp('^' + escaped + '$');
+    // Now escape special regex characters
+    processed = processed.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Finally, replace markers with actual regex patterns
+    processed = processed
+      .replace(/__PARAM__/g, '[^/]+')
+      .replace(/__WILDCARD__/g, '.*');
+    
+    return new RegExp('^' + processed + '$');
   }
 
   /**

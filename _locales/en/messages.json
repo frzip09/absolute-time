@@ -85,5 +85,8 @@
   "patternExamples": { "message": "Pattern examples:" },
   "patternExample1": { "message": "github.com/:owner/:repo/issues/*" },
   "patternExample2": { "message": "github.com/microsoft/*" },
-  "patternExample3": { "message": "github.com/*/discussions/*" }
+  "patternExample3": { "message": "github.com/*/discussions/*" },
+  "popupQuickExcludeButton": { "message": "Quick Exclude This Page" },
+  "popupExclusionWarningTitle": { "message": "This page is excluded by pattern:" },
+  "popupManageExclusions": { "message": "Manage exclusions in settings" }
 }

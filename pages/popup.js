@@ -203,7 +203,7 @@ const updateUiElements = (settings) => {
 
   // Update quick exclude button text
   if (elements.quickExcludeText) {
-    elements.quickExcludeText.textContent = chrome.i18n.getMessage('quickExcludeButton');
+    elements.quickExcludeText.textContent = chrome.i18n.getMessage('popupQuickExcludeButton');
   }
 
   // Check if current page is excluded
@@ -221,13 +221,13 @@ const updateUiElements = (settings) => {
         
         elements.exclusionWarning.style.display = 'block';
         if (elements.exclusionWarningTitle) {
-          elements.exclusionWarningTitle.textContent = chrome.i18n.getMessage('currentPageExcluded');
+          elements.exclusionWarningTitle.textContent = chrome.i18n.getMessage('popupExclusionWarningTitle');
         }
         if (elements.exclusionPattern) {
           elements.exclusionPattern.textContent = matchingPattern || '';
         }
         if (elements.manageExclusionsLink) {
-          elements.manageExclusionsLink.textContent = chrome.i18n.getMessage('manageExclusions');
+          elements.manageExclusionsLink.textContent = chrome.i18n.getMessage('popupManageExclusions');
         }
         
         // Hide quick exclude button if already excluded

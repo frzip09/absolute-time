@@ -65,7 +65,11 @@
       chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace !== "sync") return;
         const updated = {};
-        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds","exclusionPatterns"].forEach((key) => {
+        const settingKeys = window.absoluteTimeShared ? 
+          window.absoluteTimeShared.getSettingKeys() : 
+          ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds","exclusionPatterns"];
+        
+        settingKeys.forEach((key) => {
           if (Object.prototype.hasOwnProperty.call(changes, key)) {
             updated[key] = changes[key].newValue;
           }
