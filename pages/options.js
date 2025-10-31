@@ -39,6 +39,15 @@ const createSelectors = () => Object.freeze({
   examplesTitle: 'examplesTitle',
   footerLine1: 'footerLine1',
   footerLine2: 'footerLine2',
+  exclusionPatternsTitle: 'exclusionPatternsTitle',
+  exclusionPatternsDesc: 'exclusionPatternsDesc',
+  patternsList: 'patternsList',
+  newPatternInput: 'newPatternInput',
+  addPatternButton: 'addPatternButton',
+  patternExamplesTitle: 'patternExamplesTitle',
+  patternExample1: 'patternExample1',
+  patternExample2: 'patternExample2',
+  patternExample3: 'patternExample3',
 });
 
 /**
@@ -299,6 +308,20 @@ const updateUiElements = (settings) => {
     elements.resetDefaultsButton.textContent = chrome.i18n.getMessage('resetDefaults');
     elements.resetDefaultsButton.setAttribute('aria-label', chrome.i18n.getMessage('resetDefaults'));
   }
+  
+  // Localize exclusion patterns section
+  if (elements.exclusionPatternsTitle) elements.exclusionPatternsTitle.textContent = chrome.i18n.getMessage('exclusionPatternsTitle');
+  if (elements.exclusionPatternsDesc) elements.exclusionPatternsDesc.textContent = chrome.i18n.getMessage('exclusionPatternsDesc');
+  if (elements.addPatternButton) elements.addPatternButton.textContent = chrome.i18n.getMessage('addPatternButton');
+  if (elements.newPatternInput) elements.newPatternInput.placeholder = chrome.i18n.getMessage('patternPlaceholder');
+  if (elements.patternExamplesTitle) elements.patternExamplesTitle.textContent = chrome.i18n.getMessage('patternExamples');
+  if (elements.patternExample1) elements.patternExample1.textContent = chrome.i18n.getMessage('patternExample1');
+  if (elements.patternExample2) elements.patternExample2.textContent = chrome.i18n.getMessage('patternExample2');
+  if (elements.patternExample3) elements.patternExample3.textContent = chrome.i18n.getMessage('patternExample3');
+  
+  // Render exclusion patterns
+  renderPatternsList(settings.exclusionPatterns || []);
+  
   // import/export removed
 
   // Sync new control values
@@ -368,6 +391,137 @@ const showErrorNotification = async (message) => {
 };
 //#endregion
 
+//#region Exclusion Pattern Management
+/**
+ * Renders the list of exclusion patterns
+ * @param {string[]} patterns - Array of exclusion patterns
+ * @returns {void}
+ */
+const renderPatternsList = (patterns) => {
+  const patternsList = getElementById(selectors.patternsList);
+  if (!patternsList) return;
+
+  if (!patterns || patterns.length === 0) {
+    patternsList.innerHTML = `<div class="empty-patterns">${chrome.i18n.getMessage('exclusionPatternsEmpty')}</div>`;
+    return;
+  }
+
+  patternsList.innerHTML = patterns.map((pattern, index) => `
+    <div class="pattern-item" data-index="${index}">
+      <div style="flex: 1;">
+        <div class="pattern-text">${escapeHtml(pattern)}</div>
+        <div class="pattern-match-result" data-pattern-index="${index}" style="display: none;"></div>
+      </div>
+      <div class="pattern-actions">
+        <button class="test-pattern-btn" data-index="${index}">${chrome.i18n.getMessage('testPatternButton')}</button>
+        <button class="remove-pattern-btn" data-index="${index}">${chrome.i18n.getMessage('removePatternButton')}</button>
+      </div>
+    </div>
+  `).join('');
+
+  // Attach event listeners
+  patternsList.querySelectorAll('.test-pattern-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      await testPattern(patterns[index], index);
+    });
+  });
+
+  patternsList.querySelectorAll('.remove-pattern-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const index = parseInt(e.target.dataset.index);
+      await removePattern(index);
+    });
+  });
+};
+
+/**
+ * Escapes HTML special characters
+ * @param {string} text - Text to escape
+ * @returns {string} Escaped text
+ */
+const escapeHtml = (text) => {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+};
+
+/**
+ * Tests a pattern against the current page
+ * @param {string} pattern - Pattern to test
+ * @param {number} index - Pattern index
+ * @returns {Promise<void>}
+ */
+const testPattern = async (pattern, index) => {
+  const resultElement = document.querySelector(`.pattern-match-result[data-pattern-index="${index}"]`);
+  if (!resultElement) return;
+
+  const currentUrl = window.location.href;
+  const matches = window.absoluteTimeShared && 
+                  window.absoluteTimeShared.matchesPattern(currentUrl, pattern);
+
+  resultElement.style.display = 'block';
+  if (matches) {
+    resultElement.className = 'pattern-match-result matches';
+    resultElement.textContent = chrome.i18n.getMessage('patternMatchesPage');
+  } else {
+    resultElement.className = 'pattern-match-result no-match';
+    resultElement.textContent = chrome.i18n.getMessage('patternDoesNotMatch');
+  }
+
+  // Hide after 3 seconds
+  setTimeout(() => {
+    resultElement.style.display = 'none';
+  }, 3000);
+};
+
+/**
+ * Removes a pattern from the list
+ * @param {number} index - Pattern index to remove
+ * @returns {Promise<void>}
+ */
+const removePattern = async (index) => {
+  try {
+    const currentSettings = await loadSettings();
+    const newPatterns = [...(currentSettings.exclusionPatterns || [])];
+    newPatterns.splice(index, 1);
+    const newSettings = updateSettings(currentSettings, { exclusionPatterns: newPatterns });
+    await saveSettings(newSettings);
+    renderPatternsList(newPatterns);
+    await showSaveNotification();
+  } catch (error) {
+    console.error('Failed to remove pattern:', error);
+    await showErrorNotification(chrome.i18n.getMessage('notificationErrorSave'));
+  }
+};
+
+/**
+ * Adds a new pattern to the list
+ * @param {string} pattern - Pattern to add
+ * @returns {Promise<void>}
+ */
+const addPattern = async (pattern) => {
+  if (!pattern || pattern.trim() === '') return;
+
+  try {
+    const currentSettings = await loadSettings();
+    const newPatterns = [...(currentSettings.exclusionPatterns || []), pattern.trim()];
+    const newSettings = updateSettings(currentSettings, { exclusionPatterns: newPatterns });
+    await saveSettings(newSettings);
+    renderPatternsList(newPatterns);
+    
+    // Clear input
+    const input = getElementById(selectors.newPatternInput);
+    if (input) input.value = '';
+    
+    await showSaveNotification();
+  } catch (error) {
+    console.error('Failed to add pattern:', error);
+    await showErrorNotification(chrome.i18n.getMessage('notificationErrorSave'));
+  }
+};
+//#endregion
+
 //#region Event Handlers
 /**
  * Creates a toggle handler for a specific setting
@@ -419,6 +573,8 @@ const setupEventListeners = () => {
     showTimeSelect: getElementById(selectors.showTimeSelect),
     includeSecondsToggle: getElementById(selectors.includeSecondsToggle),
     resetDefaultsButton: getElementById(selectors.resetDefaultsButton),
+    addPatternButton: getElementById(selectors.addPatternButton),
+    newPatternInput: getElementById(selectors.newPatternInput),
   };
 
   const handlers = {
@@ -478,6 +634,23 @@ const setupEventListeners = () => {
       await saveSettings(defaults);
       updateUiElements(defaults);
       await showSaveNotification();
+    });
+  }
+
+  if (elements.addPatternButton) {
+    elements.addPatternButton.addEventListener('click', async () => {
+      const input = elements.newPatternInput;
+      if (input && input.value) {
+        await addPattern(input.value);
+      }
+    });
+  }
+
+  if (elements.newPatternInput) {
+    elements.newPatternInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter' && e.target.value) {
+        await addPattern(e.target.value);
+      }
     });
   }
 

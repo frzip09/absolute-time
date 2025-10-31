@@ -25,6 +25,12 @@ const createSelectors = () => Object.freeze({
   enableDesc: 'enableDesc',
   debugTitle: 'debugTitle',
   debugDesc: 'debugDesc',
+  exclusionWarning: 'exclusionWarning',
+  exclusionWarningTitle: 'exclusionWarningTitle',
+  exclusionPattern: 'exclusionPattern',
+  manageExclusionsLink: 'manageExclusionsLink',
+  quickExcludeButton: 'quickExcludeButton',
+  quickExcludeText: 'quickExcludeText',
 });
 
 const defaultSettings = createDefaultSettings();
@@ -160,6 +166,12 @@ const updateUiElements = (settings) => {
     enableDesc: getElementById(selectors.enableDesc),
     debugTitle: getElementById(selectors.debugTitle),
     debugDesc: getElementById(selectors.debugDesc),
+    exclusionWarning: getElementById(selectors.exclusionWarning),
+    exclusionWarningTitle: getElementById(selectors.exclusionWarningTitle),
+    exclusionPattern: getElementById(selectors.exclusionPattern),
+    manageExclusionsLink: getElementById(selectors.manageExclusionsLink),
+    quickExcludeButton: getElementById(selectors.quickExcludeButton),
+    quickExcludeText: getElementById(selectors.quickExcludeText),
   };
 
   const updatedToggles = {
@@ -188,6 +200,50 @@ const updateUiElements = (settings) => {
   if (elements.debugToggle && typeof elements.debugToggle.setAttribute === 'function') {
     elements.debugToggle.setAttribute('aria-label', chrome.i18n.getMessage('toggleAriaDebug'));
   }
+
+  // Update quick exclude button text
+  if (elements.quickExcludeText) {
+    elements.quickExcludeText.textContent = chrome.i18n.getMessage('quickExcludeButton');
+  }
+
+  // Check if current page is excluded
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs && tabs[0] && tabs[0].url) {
+      const currentUrl = tabs[0].url;
+      const isExcluded = window.absoluteTimeShared && 
+                        window.absoluteTimeShared.isPageExcluded(settings.exclusionPatterns || [], currentUrl);
+      
+      if (isExcluded && elements.exclusionWarning) {
+        // Find which pattern matches
+        const matchingPattern = (settings.exclusionPatterns || []).find(pattern => 
+          window.absoluteTimeShared.matchesPattern(currentUrl, pattern)
+        );
+        
+        elements.exclusionWarning.style.display = 'block';
+        if (elements.exclusionWarningTitle) {
+          elements.exclusionWarningTitle.textContent = chrome.i18n.getMessage('currentPageExcluded');
+        }
+        if (elements.exclusionPattern) {
+          elements.exclusionPattern.textContent = matchingPattern || '';
+        }
+        if (elements.manageExclusionsLink) {
+          elements.manageExclusionsLink.textContent = chrome.i18n.getMessage('manageExclusions');
+        }
+        
+        // Hide quick exclude button if already excluded
+        if (elements.quickExcludeButton) {
+          elements.quickExcludeButton.style.display = 'none';
+        }
+      } else {
+        if (elements.exclusionWarning) {
+          elements.exclusionWarning.style.display = 'none';
+        }
+        if (elements.quickExcludeButton) {
+          elements.quickExcludeButton.style.display = 'flex';
+        }
+      }
+    }
+  });
 
   return {
     toggles: updatedToggles,
@@ -225,6 +281,32 @@ const createOptionsHandler = () => (event) => {
 };
 
 /**
+ * Creates quick exclude button click handler
+ * @returns {Function} Event handler function
+ */
+const createQuickExcludeHandler = () => async () => {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || !tabs[0] || !tabs[0].url) return;
+    
+    const currentUrl = tabs[0].url;
+    const urlObj = new URL(currentUrl);
+    
+    // Create a pattern for the current page path
+    const pattern = urlObj.hostname + urlObj.pathname;
+    
+    const currentSettings = await loadSettings();
+    const newPatterns = [...(currentSettings.exclusionPatterns || []), pattern];
+    const newSettings = updateSettings(currentSettings, { exclusionPatterns: newPatterns });
+    
+    await saveSettings(newSettings);
+    updateUiElements(newSettings);
+  } catch (error) {
+    console.error('Failed to add exclusion pattern:', error);
+  }
+};
+
+/**
  * Handles settings-related errors by updating UI
  * @returns {void}
  */
@@ -249,12 +331,15 @@ const setupEventListeners = () => {
     enabledToggle: getElementById(selectors.enabledToggle),
     debugToggle: getElementById(selectors.debugToggle),
     optionsLink: getElementById(selectors.optionsLink),
+    quickExcludeButton: getElementById(selectors.quickExcludeButton),
+    manageExclusionsLink: getElementById(selectors.manageExclusionsLink),
   };
 
   const handlers = {
     enabledToggle: createToggleHandler('enabled'),
     debugToggle: createToggleHandler('debug'),
     optionsLink: createOptionsHandler(),
+    quickExclude: createQuickExcludeHandler(),
   };
 
   const addToggleA11y = (el, handler) => {
@@ -273,6 +358,12 @@ const setupEventListeners = () => {
   if (elements.optionsLink) {
     elements.optionsLink.textContent = chrome.i18n.getMessage('popupOpenOptions');
     elements.optionsLink.addEventListener('click', handlers.optionsLink);
+  }
+  if (elements.quickExcludeButton) {
+    elements.quickExcludeButton.addEventListener('click', handlers.quickExclude);
+  }
+  if (elements.manageExclusionsLink) {
+    elements.manageExclusionsLink.addEventListener('click', handlers.optionsLink);
   }
 
   return { elements, handlers };

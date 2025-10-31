@@ -65,7 +65,7 @@
       chrome.storage.onChanged.addListener((changes, namespace) => {
         if (namespace !== "sync") return;
         const updated = {};
-        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds"].forEach((key) => {
+        ["enabled","debug","dateStyle","showWeekday","showTime","includeSeconds","exclusionPatterns"].forEach((key) => {
           if (Object.prototype.hasOwnProperty.call(changes, key)) {
             updated[key] = changes[key].newValue;
           }
@@ -235,6 +235,18 @@
       // When disabled, revert any previously formatted elements
       logger("Relative time formatting is disabled");
       return unformatRelativeTimes(logger);
+    }
+
+    // Check if current page is excluded by user-defined patterns
+    if (window.absoluteTimeShared && typeof window.absoluteTimeShared.isPageExcluded === 'function') {
+      const isExcluded = window.absoluteTimeShared.isPageExcluded(
+        settings.exclusionPatterns || [],
+        window.location.href
+      );
+      if (isExcluded) {
+        logger(`Current page excluded by user pattern: ${window.location.pathname}`);
+        return unformatRelativeTimes(logger);
+      }
     }
 
     if (isIgnoredRoute()) {
